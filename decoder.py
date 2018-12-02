@@ -77,7 +77,7 @@ def main():
                         help='vocabulary file path')
     parser.add_argument('--model_save_file', type=str, default='models/energy_cnn',
                         help='model save path')
-    parser.add_argument('--topk', type=int, default=50000,
+    parser.add_argument('--topk', type=int, default=10000,
                         help="train on top k most common words in vocabulary")
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')

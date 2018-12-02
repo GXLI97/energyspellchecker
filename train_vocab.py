@@ -64,7 +64,7 @@ def main():
                         help='model save path')
     parser.add_argument('--ttsplit', action='store_true', default=False,
                         help='enables train/test splitting')
-    parser.add_argument('--topk', type=int, default=50000,
+    parser.add_argument('--topk', type=int, default=10000,
                         help="train on top k most common words in vocabulary")
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
