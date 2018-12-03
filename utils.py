@@ -3,10 +3,12 @@ import random
 import math
 import torch
 
-all_letters = string.ascii_letters + " .,;'"
+all_letters = string.ascii_lowercase
 n_chars = len(all_letters)
+min_len = 8
 
-def read_vocab(filename,topk=10000):
+
+def read_vocab(filename, topk=10000):
     lines = open(filename, encoding='utf-8').read().strip().split('\n')
     lines = [line.split() for line in lines][:topk]
     random.shuffle(lines)
@@ -15,8 +17,11 @@ def read_vocab(filename,topk=10000):
     return vocab, freq_dict
 
 # Find letter index from all_letters, e.g. "a" = 0
+
+
 def letterToIndex(letter):
     return all_letters.find(letter)
+
 
 def traintest_split(data, p=0.8):
     idx = math.floor(len(data)*p)
@@ -25,43 +30,88 @@ def traintest_split(data, p=0.8):
     return trainset, testset
 
 
-def minibatch(line, num_neg=2, min_len=7):
-    # one positive and num_neg negative examples.
-    idxs = [letterToIndex(l) for l in line]
-    inputs = torch.tensor(idxs, dtype=torch.long).unsqueeze(0)
+def r_swap(word):
+    k = random.randint(0, len(word)-2)
+    word[k], word[k+1] = word[k+1], word[k]
+    return word
+
+
+def r_add(word):
+    k = random.randint(0, len(word))
+    let = random.choice(string.ascii_lowercase)
+    word.insert(k, let)
+    return word
+
+
+def r_del(word):
+    k = random.randint(0, len(word)-1)
+    del word[k]
+    return word
+
+
+def r_replace(word):
+    k = random.randint(0, len(word)-1)
+    let = random.choice(string.ascii_lowercase)
+    word[k] = let
+    return word
+
+
+def get_random_negative(word, vocab):
+    neg = None
+    while neg is None or "".join(neg) in vocab:
+        neg = word.copy()
+        edits = [r_swap, r_add, r_del, r_replace]
+        neg = random.choice(edits)(neg)
+    return neg
+
+
+def minibatch(word, vocab, num_neg):
+    examples = []
+    word = list(word)
+    examples.append(word)
     for i in range(num_neg):
-        # swap adjacent characters randomly.
-        k = random.randint(0, len(idxs)-2)
-        if idxs[k] != idxs[k+1]:
-            swapped_idxs = idxs.copy()
-            swapped_idxs[k], swapped_idxs[k +
-                                          1] = swapped_idxs[k+1], swapped_idxs[k]
-            temp = torch.tensor(swapped_idxs, dtype=torch.long).unsqueeze(0)
-            inputs = torch.cat((inputs, temp), 0)
-    if inputs.size(1) < min_len:
-        pad = n_chars * torch.ones(inputs.size(0),
-                                   min_len-inputs.size(1), dtype=torch.long)
-        inputs = torch.cat((inputs, pad), 1)
-    labels = torch.zeros(inputs.size(0), dtype=torch.long)
-    # 1 for correct, -1 for incorrect.
+        examples.append(get_random_negative(word, vocab))
+    inputs = torch.empty(len(examples), max(
+        len(word)+1, min_len), dtype=torch.long)
+    inputs[:] = n_chars
+    for i, example in enumerate(examples, 0):
+        idxs = [letterToIndex(l) for l in example]
+        inputs[i][:len(example)] = torch.tensor(idxs, dtype=torch.long)
+    labels = torch.zeros(len(examples), dtype=torch.long)
     labels[0] = 1
-    labels[1:] = -1
     return inputs, labels
 
 
-def test_accuracy(data, cnn, n):
-    correct = 0
-    total = 0
-    with torch.no_grad():
-        for i in range(n):
-            line = data[random.randint(0, len(data)-1)]
-            if len(line) < 3:
-                continue
-            inputs, labels = minibatch(line, num_neg=9)
-            outputs = cnn(inputs)
-            v, i = outputs.min(0)
-            # first element is smallest
-            if i == 0:
-                correct += 1
-            total += 1
-    print("Accuracy: {}".format(correct/total))
+def buildall(neg):
+    examples = []
+    neg = list(neg)
+    examples.append(neg)
+    # swaps
+    for k in range(len(neg)-1):
+        word = neg.copy()
+        word[k], word[k+1] = word[k+1], word[k]
+        examples.append(word)
+    # adds
+    for k in range(len(neg)):
+        for l in all_letters:
+            word = neg.copy()
+            word.insert(k, l)
+            examples.append(word)
+    # dels
+    for k in range(len(neg)):
+        word = neg.copy()
+        del word[k]
+        examples.append(word)
+    # replaces
+    for k in range(len(neg)):
+        for l in all_letters:
+            word = neg.copy()
+            word[k] = l
+            examples.append(word)
+    inputs = torch.empty(len(examples), max(
+        len(word)+1, min_len), dtype=torch.long)
+    inputs[:] = n_chars
+    for i, example in enumerate(examples, 0):
+        idxs = [letterToIndex(l) for l in example]
+        inputs[i][:len(example)] = torch.tensor(idxs, dtype=torch.long)
+    return inputs

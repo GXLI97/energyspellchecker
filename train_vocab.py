@@ -10,12 +10,11 @@ from utils import *
 
 def train(args, model, device, optimizer, criterion, data, epoch):
     model.train()
-    # test_accuracy(vocab, cnn, 1000)
     running_loss = 0.0
     for i, line in enumerate(data, 0):
-        if len(line) < 4:
+        if len(line) < 3:
             continue
-        inputs, labels = minibatch(line, num_neg=args.num_neg)
+        inputs, labels = minibatch(line, data, num_neg=args.num_neg)
         inputs, labels = inputs.to(device), labels.to(device)
         optimizer.zero_grad()
         outputs = model(inputs)
@@ -41,7 +40,7 @@ def test(args, model, device, criterion, data, n=1000):
             word = data[random.randint(0, len(data)-1)]
             if len(word) < 3:
                 continue
-            inputs, labels = minibatch(word, num_neg=9)
+            inputs, labels = minibatch(word, data, num_neg=9)
             inputs, labels = inputs.to(device), labels.to(device)
             outputs = model(inputs)
             test_loss += criterion(outputs, labels)
@@ -63,15 +62,15 @@ def main():
     parser.add_argument('--model_save_file', type=str, default='models/energy_cnn',
                         help='model save path')
     parser.add_argument('--ttsplit', action='store_true', default=False,
-                        help='enables train/test splitting')
+                        help='enables train/test splitting (80-20)')
     parser.add_argument('--topk', type=int, default=10000,
                         help="train on top k most common words in vocabulary")
     parser.add_argument('--epochs', type=int, default=10, metavar='N',
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001)')
-    parser.add_argument('--num_neg', type=int, default=7,
-                        help='number of negative examples in each batch (default: 7)')
+    parser.add_argument('--num_neg', type=int, default=15,
+                        help='number of negative examples in each batch (default: 15)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
 
@@ -82,7 +81,7 @@ def main():
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
     # instantiate CNN, loss, and optimizer.
-    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7], 0, 1).to(device)
+    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6], 0.1, 1).to(device)
     criterion = Energy_Loss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 

@@ -9,26 +9,22 @@ from utils import *
 import numpy as np
 
 
-def decode(model, line, min_len=7):
-    # one positive and num_neg negative examples.
-    idxs = [letterToIndex(l) for l in line]
-    inputs = torch.tensor(idxs, dtype=torch.long).unsqueeze(0)
-    for i in range(len(idxs)-1):
-        swapped_idxs = idxs.copy()
-        swapped_idxs[i], swapped_idxs[i+1] = swapped_idxs[i+1], swapped_idxs[i]
-        temp = torch.tensor(swapped_idxs, dtype=torch.long).unsqueeze(0)
-        inputs = torch.cat((inputs, temp), 0)
-    if inputs.size(1) < min_len:
-        pad = n_chars * torch.ones(inputs.size(0),
-                                   min_len-inputs.size(1), dtype=torch.long)
-        inputs = torch.cat((inputs, pad), 1)
+def decode(model, device, neg, topk):
+    inputs = buildall(neg)
+    inputs = inputs.to(device)
     scores = model(inputs)
-    v, i = scores.min(0)
-    decode = ''.join([all_letters[j] for j in inputs[i].squeeze(0) if j != n_chars])
-    return decode
+    vals, idxs = torch.topk(scores, topk, dim=0, largest=False)
+    inputs_topk = inputs[idxs]
+    decodes = []
+    for i in range(topk):
+        decode_i = inputs_topk[i]
+        decode_i = ''.join([all_letters[j]
+                            for j in decode_i.squeeze(0) if j != n_chars])
+        decodes.append(decode_i)
+    return decodes
 
 
-def test(model, testset):
+def test_decoder(model, device, data, n=100, topk=10):
     model.eval()
 
     correct = 0
@@ -36,23 +32,24 @@ def test(model, testset):
 
     # yes = []
     # no = []
-    for i in range(1000):
-        word = random.choice(testset)
+    for i in range(n):
+        word = random.choice(data)
         if len(word) < 4:
             continue
-        r = random.randint(0, len(word)-2)
-        temp = list(word)
-        temp[r], temp[r+1] = temp[r+1], temp[r]
-        word_bad = ''.join(temp)
-        word_decode = decode(model, word_bad)
-        if word_decode in testset:
+        neg = get_random_negative(list(word), data)
+        word_decodes = decode(model, device, neg, topk)
+        # at least one of topk words in vocab
+        # if [i for i in word_decodes if i in data]:
+        # correct word is amongst topk
+        if word in word_decodes:
             correct += 1
-            # yes.append(freq_dict[word])
         # else:
-            # print(word, word_bad, word_decode)
-            # no.append(freq_dict[word])
+        #     print(word, word_decode)
         total += 1
-
+        # yes.append(freq_dict[word])
+        # else:
+        # print(word, word_bad, word_decode)
+        # no.append(freq_dict[word])
     print(correct/total)
 
     # import matplotlib.pyplot as plt
@@ -66,7 +63,7 @@ def test(model, testset):
 
     # plt.subplot(212)
     # accuracy = [x/y for x,y in zip(plot1[0]+1, plot1[0]+plot2[0]+1)]
-    # diff=plt.plot(bins[:-1], accuracy,color='red') 
+    # diff=plt.plot(bins[:-1], accuracy,color='red')
     # plt.show()
 
 
@@ -88,16 +85,13 @@ def main():
     kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
 
     # instantiate CNN, loss, and optimizer.
-    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7], 0, 1)
+    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6], 0.1, 1)
     model.load_state_dict(torch.load(args.model_save_file))
     model = model.to(device)
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
-    
-    test(model, vocab)
+
+    test_decoder(model, device, vocab)
+
 
 if __name__ == "__main__":
     main()
-
-
-
-
