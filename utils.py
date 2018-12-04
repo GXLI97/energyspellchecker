@@ -55,12 +55,19 @@ def r_replace(word):
 
 
 def get_random_negative(word, vocab):
-    neg = None
-    while neg is None or "".join(neg) in vocab:
-        neg = word.copy()
-        edits = [r_swap, r_add, r_del, r_replace]
-        neg = random.choice(edits)(neg)
-    return neg
+    # neg = None
+    # while neg is None or "".join(neg) in vocab:
+    #     neg = word.copy()
+    #     edits = [r_swap, r_add, r_del, r_replace]
+    #     neg = random.choice(edits)(neg)
+    # return neg
+    neg = word.copy()
+    edits = [r_swap, r_add, r_del, r_replace]
+    neg = random.choice(edits)(neg)
+    if "".join(neg) not in vocab:
+        return neg
+    else:
+        return None
 
 
 def minibatch(args, word, vocab, num_neg):
@@ -68,7 +75,9 @@ def minibatch(args, word, vocab, num_neg):
     word = list(word)
     examples.append(word)
     for i in range(num_neg):
-        examples.append(get_random_negative(word, vocab))
+        neg = get_random_negative(word, vocab)
+        if neg is not None:
+            examples.append(neg)
     inputs = torch.empty(len(examples), max(
         len(word)+1, min_len), device=args.device, dtype=torch.long)
     inputs[:] = n_chars
