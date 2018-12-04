@@ -6,50 +6,47 @@ import torch.nn as nn
 import torch.optim as optim
 from model import CNN
 from loss import Energy_Loss
+from torch.utils.data import DataLoader
 from utils import *
 
 
-def train(args, model, optimizer, criterion, data, epoch):
+def train(args, model, optimizer, criterion, train_loader, epoch):
     model.train()
     running_loss = 0.0
-    for i, word in enumerate(data, 0):
-        if len(word) < 3:
-            continue
-        inputs, labels = minibatch(args, word, data, num_neg=args.num_neg)
+    for batch_idx, (input, target) in enumerate(train_loader):
+        input, target = input.to(args.device), target.to(args.device)
         optimizer.zero_grad()
-        outputs = model(inputs)
-        loss = criterion(outputs, labels)
+        output = model(input)
+        loss = criterion(output, target)
         loss.backward()
         optimizer.step()
-        # print statistics
         running_loss += loss.item()
-        if i % 1000 == 999:
-            print('\r[%d, %5d] Avg Loss: %.3f' %
-                  (epoch, i+1, running_loss/(i+1)), end='')
+        if batch_idx % 1000 == 0:
+            print('\rTrain Epoch: {} [{}/{} ({:.0f}%)] Avg Loss: {:.6f}'.format(
+                epoch, batch_idx, len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), running_loss/(batch_idx+1)), end='')
     print()
 
 
 # train test split.
-def test(args, model, criterion, data, n=1000):
+def test(args, model, criterion, test_loader, n=1000):
     model.eval()
     correct = 0
     total = 0
     test_loss = 0.0
     with torch.no_grad():
-        for i in range(n):
-            word = data[random.randint(0, len(data)-1)]
-            if len(word) < 3:
-                continue
-            inputs, labels = minibatch(args, word, data, num_neg=9)
-            outputs = model(inputs)
-            test_loss += criterion(outputs, labels)
-
+        for i, (input, target) in enumerate(test_loader):
+            if i == n:
+                break
+            input, target = input.to(args.device), target.to(args.device)
+            outputs = model(input)
+            test_loss += criterion(outputs, target)
             v, i = outputs.min(0)
             # first element is smallest
             if i == 0:
                 correct += 1
             total += 1
-    print("Avg Loss: {:.3f}, Accuracy: {:.3f}".format(
+    print("Test: Avg Loss: {:.3f}, Accuracy: {:.3f}".format(
         test_loss/total, correct/total))
 
 
@@ -76,7 +73,8 @@ def main():
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if use_cuda else "cpu")
-    print(args.device)
+    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
+    print("Using Device: {}".format(args.device))
 
     # instantiate CNN, loss, and optimizer.
     model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6], 0.1, 1).to(device=args.device)
@@ -91,12 +89,17 @@ def main():
     else:
         trainset, testset = vocab, vocab
 
+    train_dset = Dataset(trainset, args.num_neg)
+    train_loader = DataLoader(train_dset, batch_size=1, shuffle=True, **kwargs)
+
+    test_dset = Dataset(testset, args.num_neg)
+    test_loader = DataLoader(test_dset, batch_size=1, shuffle=True, **kwargs)
+
     start = time.time()
     for epoch in range(1, args.epochs + 1):
-        train(args, model, optimizer, criterion, trainset, epoch)
-        test(args, model, criterion, testset)
-        print(next(model.parameters()).is_cuda) 
-        print("{} sec".format(time.time()-start))
+        train(args, model, optimizer, criterion, train_loader, epoch)
+        test(args, model, criterion, test_loader)
+        print("Total time: {} sec".format(time.time()-start))
     torch.save(model.state_dict(), args.model_save_file)
 
 

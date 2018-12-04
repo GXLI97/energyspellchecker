@@ -14,7 +14,8 @@ class Energy_Loss(torch.nn.Module):
         # normalize trick to ensure that x predictions don't blow up.
         # x = x/torch.norm(x, p=2)
         free_energy = 1/self.B * torch.logsumexp(-self.B*x, dim=0)
-        return x[0] + free_energy
+        y = y.type(torch.float)
+        return torch.sum(x*y) + free_energy
         # x = F.log_softmax(x, dim=0)
         # print(x)
         # y = y.type(torch.float)

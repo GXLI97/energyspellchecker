@@ -2,6 +2,7 @@ import string
 import random
 import math
 import torch
+from torch.utils import data
 
 all_letters = string.ascii_lowercase
 n_chars = len(all_letters)
@@ -10,9 +11,9 @@ min_len = 8
 
 def read_vocab(filename, topk=10000):
     lines = open(filename, encoding='utf-8').read().strip().split('\n')
-    lines = [line.split() for line in lines][:topk]
+    lines = [line.split() for line in lines]
     random.shuffle(lines)
-    vocab = [line[0] for line in lines]
+    vocab = [line[0] for line in lines if len(line[0]) >= 3][:topk]
     freq_dict = {line[0]: int(line[1]) for line in lines}
     return vocab, freq_dict
 
@@ -62,6 +63,8 @@ def get_random_negative(word, vocab):
     #     neg = random.choice(edits)(neg)
     # return neg
     neg = word.copy()
+    if len(neg) < 3:
+        print("we messed up...", "".join(neg))
     edits = [r_swap, r_add, r_del, r_replace]
     neg = random.choice(edits)(neg)
     if "".join(neg) not in vocab:
@@ -122,3 +125,37 @@ def buildall(args, neg):
         idxs = [letterToIndex(l) for l in example]
         inputs[i][:len(example)] = torch.tensor(idxs, device=args.device, type=torch.long)
     return inputs
+
+class Dataset(data.Dataset):
+    
+    def __init__(self, vocab, num_neg):
+        super(Dataset, self).__init__()
+        self.vocab = vocab
+        self.num_neg = num_neg
+
+    
+    def __len__(self):
+        return len(self.vocab)
+
+    def __getitem__(self, index):
+        word = self.vocab[index]
+        inputs, labels = minibatch2(word, self.vocab, self.num_neg)
+        return inputs, labels
+
+def minibatch2(word, vocab, num_neg):
+    examples = []
+    word = list(word)
+    examples.append(word)
+    for i in range(num_neg):
+        neg = get_random_negative(word, vocab)
+        if neg is not None:
+            examples.append(neg)
+    inputs = torch.empty(len(examples), max(
+        len(word)+1, min_len), dtype=torch.long)
+    inputs[:] = n_chars
+    for i, example in enumerate(examples, 0):
+        idxs = [letterToIndex(l) for l in example]
+        inputs[i][:len(example)] = torch.tensor(idxs, dtype=torch.long)
+    labels = torch.zeros(len(examples), dtype=torch.long)
+    labels[0] = 1
+    return inputs, labels

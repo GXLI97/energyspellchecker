@@ -25,7 +25,7 @@ class CNN(nn.Module):
         # input is (N, W)
         # N is number of examples in minibatch
         # W is length of each example (maximum word length)
-        x = self.embedding(input)  # (N, W, D)
+        x = self.embedding(input.squeeze(0))  # (N, W, D)
         x = x.unsqueeze(1)  # (N, 1, W, D)
         x = [F.relu(conv(x)).squeeze(3)
              for conv in self.convs1]  # [(N, Co, Lk) for K in Ks]
