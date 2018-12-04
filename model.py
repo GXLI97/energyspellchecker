@@ -1,6 +1,7 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from torch.nn.utils.rnn import pack_padded_sequence, pad_packed_sequence
 
 
 class CNN(nn.Module):
@@ -15,7 +16,7 @@ class CNN(nn.Module):
         Out = output_dim
         # construct embedding lookup table.
         # use last one as data pad.
-        self.embedding = nn.Embedding(Nc+1, D, padding_idx=Nc)
+        self.embedding = nn.Embedding(Nc, D, padding_idx=0)
         self.convs1 = nn.ModuleList(
             [nn.Conv2d(Ci, Co, kernel_size=(K, D)) for K in Ks])
         self.dropout = nn.Dropout(Drop)
@@ -25,7 +26,7 @@ class CNN(nn.Module):
         # input is (N, W)
         # N is number of examples in minibatch
         # W is length of each example (maximum word length)
-        x = self.embedding(input.squeeze(0))  # (N, W, D)
+        x = self.embedding(input)  # (N, W, D)
         x = x.unsqueeze(1)  # (N, 1, W, D)
         x = [F.relu(conv(x)).squeeze(3)
              for conv in self.convs1]  # [(N, Co, Lk) for K in Ks]

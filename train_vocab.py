@@ -19,15 +19,15 @@ def train(args, model, optimizer, criterion, train_loader, epoch):
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
-        if batch_idx % 1000 == 0:
-            print('\rTrain Epoch: {} [{}/{} ({:.0f}%)] Avg Loss: {:.6f}'.format(
-                epoch, batch_idx, len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()), end='')
+        if batch_idx * train_loader.batch_size % 1000 == 0:
+            print('\rTrain Epoch: {} [{}/{} ({:.0f}%)] Loss: {:.6f}'.format(
+                epoch, batch_idx * (train_loader.batch_size), len(train_loader.dataset),
+                100. * batch_idx / len(train_loader), loss.item()/train_loader.batch_size), end='')
     print()
 
 
 # train test split.
-def test(args, model, criterion, test_loader, n=1000):
+def test(args, model, criterion, test_loader, n=100):
     model.eval()
     correct = 0
     total = 0
@@ -63,8 +63,10 @@ def main():
                         help='number of epochs to train (default: 10)')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001)')
-    parser.add_argument('--num_neg', type=int, default=15,
-                        help='number of negative examples in each batch (default: 15)')
+    parser.add_argument('--train_num_neg', type=int, default=15,
+                        help='number of negative examples in each training batch (default: 15)')
+    parser.add_argument('--test_num_neg', type=int, default=9,
+                        help='number of negative examples in each test (default: 9)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
 
@@ -87,11 +89,11 @@ def main():
     else:
         trainset, testset = vocab, vocab
 
-    train_dset = Dataset(trainset, args.num_neg)
-    train_loader = DataLoader(train_dset, batch_size=1, shuffle=True, **kwargs)
+    train_dset = Dataset(trainset, args.train_num_neg)
+    train_loader = DataLoader(train_dset, batch_size=1, shuffle=True, num_workers=1, collate_fn=collate_fn, **kwargs)
 
-    test_dset = Dataset(testset, args.num_neg)
-    test_loader = DataLoader(test_dset, batch_size=1, shuffle=True, **kwargs)
+    test_dset = Dataset(testset, args.test_num_neg)
+    test_loader = DataLoader(test_dset, batch_size=1, shuffle=True,  num_workers=0, collate_fn=collate_fn, **kwargs)
 
     start = time.time()
     for epoch in range(1, args.epochs + 1):

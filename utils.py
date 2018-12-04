@@ -1,10 +1,12 @@
 import string
 import random
 import math
+import itertools
 import torch
 from torch.utils import data
 
-all_letters = string.ascii_lowercase
+all_letters = ['<pad>'] + list(string.ascii_lowercase)
+tok2index = {k: v for v, k in enumerate(all_letters)}
 n_chars = len(all_letters)
 min_len = 8
 
@@ -12,14 +14,9 @@ min_len = 8
 def read_vocab(filename, topk=10000):
     lines = open(filename, encoding='utf-8').read().strip().split('\n')
     lines = [line.split() for line in lines]
-    random.shuffle(lines)
     vocab = [line[0] for line in lines if len(line[0]) >= 3][:topk]
     freq_dict = {line[0]: int(line[1]) for line in lines}
     return vocab, freq_dict
-
-
-def letterToIndex(letter):
-    return all_letters.find(letter)
 
 
 def traintest_split(data, p=0.8):
@@ -73,25 +70,6 @@ def get_random_negative(word, vocab):
         return None
 
 
-def minibatch(args, word, vocab, num_neg):
-    examples = []
-    word = list(word)
-    examples.append(word)
-    for i in range(num_neg):
-        neg = get_random_negative(word, vocab)
-        if neg is not None:
-            examples.append(neg)
-    inputs = torch.empty(len(examples), max(
-        len(word)+1, min_len), device=args.device, dtype=torch.long)
-    inputs[:] = n_chars
-    for i, example in enumerate(examples, 0):
-        idxs = [letterToIndex(l) for l in example]
-        inputs[i][:len(example)] = torch.tensor(idxs, device=args.device, dtype=torch.long)
-    labels = torch.zeros(len(examples), device=args.device, dtype=torch.long)
-    labels[0] = 1
-    return inputs, labels
-
-
 def buildall(args, neg):
     examples = []
     neg = list(neg)
@@ -139,10 +117,10 @@ class Dataset(data.Dataset):
 
     def __getitem__(self, index):
         word = self.vocab[index]
-        inputs, labels = minibatch2(word, self.vocab, self.num_neg)
+        inputs, labels = nce(word, self.vocab, self.num_neg)
         return inputs, labels
 
-def minibatch2(word, vocab, num_neg):
+def nce(word, vocab, num_neg):
     examples = []
     word = list(word)
     examples.append(word)
@@ -150,22 +128,16 @@ def minibatch2(word, vocab, num_neg):
         neg = get_random_negative(word, vocab)
         if neg is not None:
             examples.append(neg)
-    inputs = torch.empty(len(examples), max(len(word)+1, min_len), dtype=torch.long)
-    # inputs = torch.empty(len(examples), 40, dtype=torch.long)
-    inputs[:] = n_chars
-    for i, example in enumerate(examples, 0):
-        idxs = [letterToIndex(l) for l in example]
-        inputs[i][:len(example)] = torch.tensor(idxs, dtype=torch.long)
+    vec_examples = [[tok2index[tok] for tok in ex] for ex in examples]
     labels = torch.zeros(len(examples), dtype=torch.long)
     labels[0] = 1
-    return inputs, labels
+    return vec_examples, labels
 
 def collate_fn(batch):
-    # inputs = [b[0] for b in batch]
-    # blah = torch.nn.utils.rnn.pad_sequence(inputs, batch_first=True)
-    # print(blah)
-    # exit()
-    inputs = torch.cat([b[0] for b in batch], 0)
+    vec_examples = list(itertools.chain(*[b[0] for b in batch]))
+    vec_lengths = torch.tensor([len(seq) for seq in vec_examples], dtype=torch.long)
+    inputs = torch.zeros(len(vec_examples), max(vec_lengths.max(), min_len), dtype=torch.long)
+    for idx, (seq, seqlen) in enumerate(zip(vec_examples, vec_lengths)):
+        inputs[idx, :seqlen] = torch.tensor(seq, dtype=torch.long)
     targets = torch.cat([b[1] for b in batch], 0)
     return inputs, targets
-    # return batch
