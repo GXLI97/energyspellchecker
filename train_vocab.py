@@ -75,7 +75,7 @@ def main():
     args = parser.parse_args()
     args.use_cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.use_cuda else "cpu")
-    kwargs = {'num_workers': 8, 'pin_memory': True} if args.use_cuda else {}
+    kwargs = {'num_workers': 4, 'pin_memory': True} if args.use_cuda else {}
     print("Using Device: {}".format(args.device))
 
     # instantiate CNN, loss, and optimizer.
@@ -92,7 +92,7 @@ def main():
         trainset, testset = vocab, vocab
 
     train_dset = Dataset(trainset, args.train_num_neg)
-    train_loader = DataLoader(train_dset, batch_size=10, shuffle=True, collate_fn=collate_fn, **kwargs)
+    train_loader = DataLoader(train_dset, batch_size=20, shuffle=True, collate_fn=collate_fn, **kwargs)
 
     test_dset = Dataset(testset, args.test_num_neg)
     test_loader = DataLoader(test_dset, batch_size=1, shuffle=True, collate_fn=collate_fn, **kwargs)
