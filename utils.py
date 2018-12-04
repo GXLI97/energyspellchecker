@@ -14,7 +14,6 @@ def read_vocab(filename, topk=10000):
     lines = [line.split() for line in lines]
     random.shuffle(lines)
     vocab = [line[0] for line in lines if len(line[0]) >= 3][:topk]
-    print(len(max(vocab, key=len)))
     freq_dict = {line[0]: int(line[1]) for line in lines}
     return vocab, freq_dict
 
@@ -151,8 +150,8 @@ def minibatch2(word, vocab, num_neg):
         neg = get_random_negative(word, vocab)
         if neg is not None:
             examples.append(neg)
-    inputs = torch.empty(len(examples), max(
-        len(word)+1, min_len), dtype=torch.long)
+    # inputs = torch.empty(len(examples), max(len(word)+1, min_len), dtype=torch.long)
+    inputs = torch.empty(len(examples), 40, dtype=torch.long)
     inputs[:] = n_chars
     for i, example in enumerate(examples, 0):
         idxs = [letterToIndex(l) for l in example]
@@ -160,3 +159,8 @@ def minibatch2(word, vocab, num_neg):
     labels = torch.zeros(len(examples), dtype=torch.long)
     labels[0] = 1
     return inputs, labels
+
+def collate_fn(batch):
+    inputs = torch.cat([b[0] for b in batch], 0)
+    targets = torch.cat([b[1] for b in batch], 0)
+    return inputs, targets
