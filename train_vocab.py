@@ -14,7 +14,7 @@ def train(args, model, optimizer, criterion, train_loader, epoch):
     model.train()
     for batch_idx, (input, target) in enumerate(train_loader):
         if args.use_cuda:
-            input, target = input.cuda(args.device, non_blocking=False), target.cuda(args.device, non_blocking=False)
+            input, target = input.cuda(args.device, non_blocking=True), target.cuda(args.device, non_blocking=True)
         optimizer.zero_grad()
         output = model(input)
         loss = criterion(output, target)
