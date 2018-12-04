@@ -73,7 +73,7 @@ def main():
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if use_cuda else "cpu")
-    kwargs = {'num_workers': 16, 'pin_memory': True} if use_cuda else {}
+    kwargs = {'num_workers': 8, 'pin_memory': True} if use_cuda else {}
     print("Using Device: {}".format(args.device))
 
     # instantiate CNN, loss, and optimizer.
