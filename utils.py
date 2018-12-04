@@ -150,8 +150,8 @@ def minibatch2(word, vocab, num_neg):
         neg = get_random_negative(word, vocab)
         if neg is not None:
             examples.append(neg)
-    # inputs = torch.empty(len(examples), max(len(word)+1, min_len), dtype=torch.long)
-    inputs = torch.empty(len(examples), 40, dtype=torch.long)
+    inputs = torch.empty(len(examples), max(len(word)+1, min_len), dtype=torch.long)
+    # inputs = torch.empty(len(examples), 40, dtype=torch.long)
     inputs[:] = n_chars
     for i, example in enumerate(examples, 0):
         idxs = [letterToIndex(l) for l in example]
