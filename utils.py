@@ -80,7 +80,7 @@ def minibatch(args, word, vocab, num_neg):
     return inputs, labels
 
 
-def buildall(neg):
+def buildall(args, neg):
     examples = []
     neg = list(neg)
     examples.append(neg)
@@ -107,9 +107,9 @@ def buildall(neg):
             word[k] = l
             examples.append(word)
     inputs = torch.empty(len(examples), max(
-        len(word)+1, min_len), dtype=torch.long)
+        len(word)+1, min_len), device=args.device, dtype=torch.long)
     inputs[:] = n_chars
     for i, example in enumerate(examples, 0):
         idxs = [letterToIndex(l) for l in example]
-        inputs[i][:len(example)] = torch.tensor(idxs, dtype=torch.long)
+        inputs[i][:len(example)] = torch.tensor(idxs, device=args.device, type=torch.long)
     return inputs

@@ -9,9 +9,9 @@ from utils import *
 import numpy as np
 
 
-def decode(model, device, neg, topk):
+def decode(args, model, neg, topk):
     inputs = buildall(neg)
-    inputs = inputs.to(device)
+    inputs = inputs.to(args.device)
     scores = model(inputs)
     vals, idxs = torch.topk(scores, topk, dim=0, largest=False)
     inputs_topk = inputs[idxs]
@@ -24,7 +24,7 @@ def decode(model, device, neg, topk):
     return decodes
 
 
-def test_decoder(model, device, data, n=100, topk=10):
+def test_decoder(model, data, n=100, topk=10):
     model.eval()
 
     correct = 0
@@ -37,7 +37,7 @@ def test_decoder(model, device, data, n=100, topk=10):
         if len(word) < 4:
             continue
         neg = get_random_negative(list(word), data)
-        word_decodes = decode(model, device, neg, topk)
+        word_decodes = decode(args, model, neg, topk)
         # at least one of topk words in vocab
         # if [i for i in word_decodes if i in data]:
         # correct word is amongst topk
@@ -80,9 +80,8 @@ def main():
                         help='disables CUDA training')
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
-    device = torch.device("cuda" if use_cuda else "cpu")
-    # unclear what this is for...
-    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
+    args.device = torch.device("cuda" if use_cuda else "cpu")
+    print(args.device)
 
     # instantiate CNN, loss, and optimizer.
     model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6], 0.1, 1)
@@ -90,7 +89,7 @@ def main():
     model = model.to(device)
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
 
-    test_decoder(model, device, vocab)
+    test_decoder(args, model, vocab)
 
 
 if __name__ == "__main__":
