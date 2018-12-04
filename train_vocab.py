@@ -71,6 +71,8 @@ def main():
                         help='number of examples in each batch (default: 25)')
     parser.add_argument('--test_num_neg', type=int, default=9,
                         help='number of negative examples in each test (default: 9)')
+    parser.add_argument('--num_workers', type=int, default=4,
+                        help='number of dataloader workers (default: 4)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
 
