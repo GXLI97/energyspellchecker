@@ -19,7 +19,7 @@ def train(args, model, optimizer, criterion, train_loader, epoch):
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
-        if batch_idx % 10 == 0:
+        if batch_idx % 100 == 0:
             print('\rTrain Epoch: {} [{}/{} ({:.0f}%)] Avg Loss: {:.6f}'.format(
                 epoch, batch_idx * len(input), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()/len(input)), end='')
