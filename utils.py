@@ -161,6 +161,11 @@ def minibatch2(word, vocab, num_neg):
     return inputs, labels
 
 def collate_fn(batch):
+    # inputs = [b[0] for b in batch]
+    # blah = torch.nn.utils.rnn.pad_sequence(inputs, batch_first=True)
+    # print(blah)
+    # exit()
     inputs = torch.cat([b[0] for b in batch], 0)
     targets = torch.cat([b[1] for b in batch], 0)
     return inputs, targets
+    # return batch
