@@ -8,7 +8,7 @@ from loss import Energy_Loss
 from utils import *
 
 
-def train(args, model, device, optimizer, criterion, data, epoch):
+def train(args, model, optimizer, criterion, data, epoch):
     model.train()
     running_loss = 0.0
     for i, line in enumerate(data, 0):
@@ -29,7 +29,7 @@ def train(args, model, device, optimizer, criterion, data, epoch):
 
 
 # train test split.
-def test(args, model, device, criterion, data, n=1000):
+def test(args, model, criterion, data, n=1000):
     model.eval()
     correct = 0
     total = 0
