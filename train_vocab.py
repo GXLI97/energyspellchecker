@@ -1,4 +1,5 @@
 import argparse
+import time
 import random
 import torch
 import torch.nn as nn
@@ -76,7 +77,7 @@ def main():
     use_cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if use_cuda else "cpu")
     print(args.device)
-    
+
     # instantiate CNN, loss, and optimizer.
     model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6], 0.1, 1).to(device=args.device)
     criterion = Energy_Loss()
@@ -90,9 +91,11 @@ def main():
     else:
         trainset, testset = vocab, vocab
 
+    start = time.time()
     for epoch in range(1, args.epochs + 1):
         train(args, model, optimizer, criterion, trainset, epoch)
         test(args, model, criterion, testset)
+        print("{} sec".format(time.time()-start))
 
     torch.save(model.state_dict(), args.model_save_file)
 
