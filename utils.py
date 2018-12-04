@@ -14,6 +14,7 @@ def read_vocab(filename, topk=10000):
     lines = [line.split() for line in lines]
     random.shuffle(lines)
     vocab = [line[0] for line in lines if len(line[0]) >= 3][:topk]
+    print(len(max(vocab, key=len)))
     freq_dict = {line[0]: int(line[1]) for line in lines}
     return vocab, freq_dict
 
