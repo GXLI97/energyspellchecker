@@ -11,10 +11,10 @@ from utils import *
 def train(args, model, optimizer, criterion, data, epoch):
     model.train()
     running_loss = 0.0
-    for i, line in enumerate(data, 0):
-        if len(line) < 3:
+    for i, word in enumerate(data, 0):
+        if len(word) < 3:
             continue
-        inputs, labels = minibatch(args, line, data, num_neg=args.num_neg)
+        inputs, labels = minibatch(args, word, data, num_neg=args.num_neg)
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, labels)
@@ -39,7 +39,7 @@ def test(args, model, criterion, data, n=1000):
             word = data[random.randint(0, len(data)-1)]
             if len(word) < 3:
                 continue
-            inputs, labels = minibatch(word, data, num_neg=9)
+            inputs, labels = minibatch(args, word, data, num_neg=9)
             outputs = model(inputs)
             test_loss += criterion(outputs, labels)
 
