@@ -95,8 +95,8 @@ def main():
     for epoch in range(1, args.epochs + 1):
         train(args, model, optimizer, criterion, trainset, epoch)
         test(args, model, criterion, testset)
+        print(next(model.parameters()).is_cuda) 
         print("{} sec".format(time.time()-start))
-
     torch.save(model.state_dict(), args.model_save_file)
 
 
