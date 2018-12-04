@@ -8,7 +8,7 @@ from torch.utils import data
 all_letters = ['<pad>'] + list(string.ascii_lowercase)
 tok2index = {k: v for v, k in enumerate(all_letters)}
 n_chars = len(all_letters)
-min_len = 7
+min_len = 6
 
 
 def read_vocab(filename, topk=10000):

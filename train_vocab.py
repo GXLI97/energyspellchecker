@@ -59,19 +59,17 @@ def main():
                         help='model save path')
     parser.add_argument('--ttsplit', action='store_true', default=False,
                         help='enables train/test splitting (80-20)')
-    parser.add_argument('--topk', type=int, default=10000,
-                        help="train on top k most common words in vocabulary")
-    parser.add_argument('--epochs', type=int, default=10, metavar='N',
-                        help='number of epochs to train (default: 10)')
+    parser.add_argument('--topk', type=int, default=50000,
+                        help="train on top k most common words in vocabulary (default: 50000)")
+    parser.add_argument('--epochs', type=int, default=20, metavar='N',
+                        help='number of epochs to train (default: 20)')
     parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
                         help='learning rate (default: 0.001)')
     parser.add_argument('--train_num_neg', type=int, default=15,
                         help='number of negative examples in each training batch (default: 15)')
+    parser.add_argument('--batch_size', type=int, default=25,
+                        help='number of examples in each batch (default: 25)')
     parser.add_argument('--test_num_neg', type=int, default=9,
-                        help='number of negative examples in each test (default: 9)')
-    parser.add_argument('--num_workers', type=int, default=1,
-                        help='number of negative examples in each test (default: 9)')
-    parser.add_argument('--batch_size', type=int, default=10,
                         help='number of negative examples in each test (default: 9)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
@@ -79,7 +77,7 @@ def main():
     args = parser.parse_args()
     args.use_cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.use_cuda else "cpu")
-    kwargs = {'num_workers': args.num_workers, 'pin_memory': True} if args.use_cuda else {}
+    kwargs = {'num_workers': 2, 'pin_memory': True} if args.use_cuda else {}
     print("Using Device: {}".format(args.device))
 
     # instantiate CNN, loss, and optimizer.
