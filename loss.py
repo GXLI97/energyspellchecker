@@ -11,8 +11,11 @@ class Energy_Loss(torch.nn.Module):
     def forward(self, x, y):
         # calculate some loss.
         x = x.squeeze(1)
+        y = y.type(torch.float)
         # normalize trick to ensure that x predictions don't blow up.
         # x = x/torch.norm(x, p=2)
-        free_energy = 1/self.B * torch.logsumexp(-self.B*x, dim=0)
-        print(torch.sum(x*y.type(torch.float)) + free_energy))
-        return torch.sum(x*y.type(torch.float)) + free_energy
+        loss1 = torch.sum(x*y)/torch.sum(y)
+        loss2 = 1/self.B + torch.logsumexp(-self.B * x, dim=0)
+        loss = loss1 + loss2
+        # print("{:.2f} {:.2f}".format(loss1.item(), loss2.item()))
+        return loss
