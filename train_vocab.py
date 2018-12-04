@@ -69,13 +69,17 @@ def main():
                         help='number of negative examples in each training batch (default: 15)')
     parser.add_argument('--test_num_neg', type=int, default=9,
                         help='number of negative examples in each test (default: 9)')
+    parser.add_argument('--num_workers', type=int, default=1,
+                        help='number of negative examples in each test (default: 9)')
+    parser.add_argument('--batch_size', type=int, default=10,
+                        help='number of negative examples in each test (default: 9)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
 
     args = parser.parse_args()
     args.use_cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.use_cuda else "cpu")
-    kwargs = {'num_workers': 2, 'pin_memory': True} if args.use_cuda else {}
+    kwargs = {'num_workers': args.num_workers, 'pin_memory': True} if args.use_cuda else {}
     print("Using Device: {}".format(args.device))
 
     # instantiate CNN, loss, and optimizer.
@@ -92,7 +96,7 @@ def main():
         trainset, testset = vocab, vocab
 
     train_dset = Dataset(trainset, args.train_num_neg)
-    train_loader = DataLoader(train_dset, batch_size=20, shuffle=True, collate_fn=collate_fn, **kwargs)
+    train_loader = DataLoader(train_dset, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn, **kwargs)
 
     test_dset = Dataset(testset, args.test_num_neg)
     test_loader = DataLoader(test_dset, batch_size=1, shuffle=True, collate_fn=collate_fn, **kwargs)
