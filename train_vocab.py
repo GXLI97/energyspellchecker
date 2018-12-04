@@ -92,7 +92,7 @@ def main():
         trainset, testset = vocab, vocab
 
     train_dset = Dataset(trainset, args.train_num_neg)
-    train_loader = DataLoader(train_dset, batch_size=5, shuffle=True, collate_fn=collate_fn, **kwargs)
+    train_loader = DataLoader(train_dset, batch_size=1, shuffle=True, collate_fn=collate_fn, **kwargs)
 
     test_dset = Dataset(testset, args.test_num_neg)
     test_loader = DataLoader(test_dset, batch_size=1, shuffle=True, collate_fn=collate_fn, **kwargs)
