@@ -15,10 +15,3 @@ class Energy_Loss(torch.nn.Module):
         # x = x/torch.norm(x, p=2)
         free_energy = 1/self.B * torch.logsumexp(-self.B*x, dim=0)
         return torch.sum(x*y.type(torch.float)) + free_energy
-        # x = F.log_softmax(x, dim=0)
-        # print(x)
-        # y = y.type(torch.float)
-        # totloss = torch.sum(x*y)
-        # totloss = x[0]
-        # print(totloss)
-        # return totloss

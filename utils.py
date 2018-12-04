@@ -101,17 +101,18 @@ def buildall(args, neg):
     inputs[:] = n_chars
     for i, example in enumerate(examples, 0):
         idxs = [letterToIndex(l) for l in example]
-        inputs[i][:len(example)] = torch.tensor(idxs, device=args.device, type=torch.long)
+        inputs[i][:len(example)] = torch.tensor(
+            idxs, device=args.device, type=torch.long)
     return inputs
 
+
 class Dataset(data.Dataset):
-    
+
     def __init__(self, vocab, num_neg):
         super(Dataset, self).__init__()
         self.vocab = vocab
         self.num_neg = num_neg
 
-    
     def __len__(self):
         return len(self.vocab)
 
@@ -119,6 +120,7 @@ class Dataset(data.Dataset):
         word = self.vocab[index]
         inputs, labels = nce(word, self.vocab, self.num_neg)
         return inputs, labels
+
 
 def nce(word, vocab, num_neg):
     examples = []
@@ -133,10 +135,13 @@ def nce(word, vocab, num_neg):
     labels[0] = 1
     return vec_examples, labels
 
+
 def collate_fn(batch):
     vec_examples = list(itertools.chain(*[b[0] for b in batch]))
-    vec_lengths = torch.tensor([len(seq) for seq in vec_examples], dtype=torch.long)
-    inputs = torch.zeros(len(vec_examples), max(vec_lengths.max(), min_len), dtype=torch.long)
+    vec_lengths = torch.tensor([len(seq)
+                                for seq in vec_examples], dtype=torch.long)
+    inputs = torch.zeros(len(vec_examples), max(
+        vec_lengths.max(), min_len), dtype=torch.long)
     for idx, (seq, seqlen) in enumerate(zip(vec_examples, vec_lengths)):
         inputs[idx, :seqlen] = torch.tensor(seq, dtype=torch.long)
     targets = torch.cat([b[1] for b in batch], 0)
