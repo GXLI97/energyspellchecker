@@ -91,7 +91,7 @@ def main():
     train_loader = DataLoader(train_dset, batch_size=10, shuffle=True, collate_fn=collate_fn, **kwargs)
 
     test_dset = Dataset(testset, args.num_neg)
-    test_loader = DataLoader(test_dset, batch_size=10, shuffle=True, collate_fn=collate_fn, **kwargs)
+    test_loader = DataLoader(test_dset, batch_size=1, shuffle=True, collate_fn=collate_fn, **kwargs)
 
     start = time.time()
     for epoch in range(1, args.epochs + 1):
