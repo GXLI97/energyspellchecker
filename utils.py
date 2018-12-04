@@ -8,7 +8,7 @@ from torch.utils import data
 all_letters = ['<pad>'] + list(string.ascii_lowercase)
 tok2index = {k: v for v, k in enumerate(all_letters)}
 n_chars = len(all_letters)
-min_len = 8
+min_len = 7
 
 
 def read_vocab(filename, topk=10000):
@@ -53,15 +53,7 @@ def r_replace(word):
 
 
 def get_random_negative(word, vocab):
-    # neg = None
-    # while neg is None or "".join(neg) in vocab:
-    #     neg = word.copy()
-    #     edits = [r_swap, r_add, r_del, r_replace]
-    #     neg = random.choice(edits)(neg)
-    # return neg
     neg = word.copy()
-    if len(neg) < 3:
-        print("we messed up...", "".join(neg))
     edits = [r_swap, r_add, r_del, r_replace]
     neg = random.choice(edits)(neg)
     if "".join(neg) not in vocab:
