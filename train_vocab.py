@@ -13,7 +13,8 @@ from utils import *
 def train(args, model, optimizer, criterion, train_loader, epoch):
     model.train()
     for batch_idx, (input, target) in enumerate(train_loader):
-        input, target = input.to(args.device), target.to(args.device)
+        if args.use_cuda:
+            input, target = input.cuda(args.device, non_blocking=False), target.cuda(args.device, non_blocking=False)
         optimizer.zero_grad()
         output = model(input)
         loss = criterion(output, target)
@@ -27,7 +28,7 @@ def train(args, model, optimizer, criterion, train_loader, epoch):
 
 
 # train test split.
-def test(args, model, criterion, test_loader, n=100):
+def test(args, model, criterion, test_loader, n=1000):
     model.eval()
     correct = 0
     total = 0
@@ -36,7 +37,8 @@ def test(args, model, criterion, test_loader, n=100):
         for i, (input, target) in enumerate(test_loader):
             if i == n:
                 break
-            input, target = input.to(args.device), target.to(args.device)
+            if args.use_cuda:
+                input, target = input.cuda(args.device, non_blocking=True), target.cuda(args.device, non_blocking=True)
             outputs = model(input)
             test_loss += criterion(outputs, target)
             v, i = outputs.min(0)
@@ -71,9 +73,9 @@ def main():
                         help='disables CUDA training')
 
     args = parser.parse_args()
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
-    args.device = torch.device("cuda" if use_cuda else "cpu")
-    kwargs = {'num_workers': 8, 'pin_memory': True} if use_cuda else {}
+    args.use_cuda = not args.no_cuda and torch.cuda.is_available()
+    args.device = torch.device("cuda" if args.use_cuda else "cpu")
+    kwargs = {'num_workers': 8, 'pin_memory': True} if args.use_cuda else {}
     print("Using Device: {}".format(args.device))
 
     # instantiate CNN, loss, and optimizer.
@@ -90,7 +92,7 @@ def main():
         trainset, testset = vocab, vocab
 
     train_dset = Dataset(trainset, args.train_num_neg)
-    train_loader = DataLoader(train_dset, batch_size=1, shuffle=True, collate_fn=collate_fn, **kwargs)
+    train_loader = DataLoader(train_dset, batch_size=5, shuffle=True, collate_fn=collate_fn, **kwargs)
 
     test_dset = Dataset(testset, args.test_num_neg)
     test_loader = DataLoader(test_dset, batch_size=1, shuffle=True, collate_fn=collate_fn, **kwargs)
