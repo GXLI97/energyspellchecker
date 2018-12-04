@@ -14,8 +14,7 @@ def train(args, model, device, optimizer, criterion, data, epoch):
     for i, line in enumerate(data, 0):
         if len(line) < 3:
             continue
-        inputs, labels = minibatch(line, data, num_neg=args.num_neg)
-        inputs, labels = inputs.to(device), labels.to(device)
+        inputs, labels = minibatch(args, line, data, num_neg=args.num_neg)
         optimizer.zero_grad()
         outputs = model(inputs)
         loss = criterion(outputs, labels)
@@ -41,7 +40,6 @@ def test(args, model, device, criterion, data, n=1000):
             if len(word) < 3:
                 continue
             inputs, labels = minibatch(word, data, num_neg=9)
-            inputs, labels = inputs.to(device), labels.to(device)
             outputs = model(inputs)
             test_loss += criterion(outputs, labels)
 
@@ -76,12 +74,10 @@ def main():
 
     args = parser.parse_args()
     use_cuda = not args.no_cuda and torch.cuda.is_available()
-    device = torch.device("cuda" if use_cuda else "cpu")
-    # unclear what this is for...
-    kwargs = {'num_workers': 1, 'pin_memory': True} if use_cuda else {}
+    args.device = torch.device("cuda" if use_cuda else "cpu")
 
     # instantiate CNN, loss, and optimizer.
-    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6], 0.1, 1).to(device)
+    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6], 0.1, 1).to(device=args.device)
     criterion = Energy_Loss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
@@ -94,8 +90,8 @@ def main():
         trainset, testset = vocab, vocab
 
     for epoch in range(1, args.epochs + 1):
-        train(args, model, device, optimizer, criterion, trainset, epoch)
-        test(args, model, device, criterion, testset)
+        train(args, model, optimizer, criterion, trainset, epoch)
+        test(args, model, criterion, testset)
 
     torch.save(model.state_dict(), args.model_save_file)
 

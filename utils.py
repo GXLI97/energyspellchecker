@@ -16,8 +16,6 @@ def read_vocab(filename, topk=10000):
     freq_dict = {line[0]: int(line[1]) for line in lines}
     return vocab, freq_dict
 
-# Find letter index from all_letters, e.g. "a" = 0
-
 
 def letterToIndex(letter):
     return all_letters.find(letter)
@@ -65,19 +63,19 @@ def get_random_negative(word, vocab):
     return neg
 
 
-def minibatch(word, vocab, num_neg):
+def minibatch(args, word, vocab, num_neg):
     examples = []
     word = list(word)
     examples.append(word)
     for i in range(num_neg):
         examples.append(get_random_negative(word, vocab))
     inputs = torch.empty(len(examples), max(
-        len(word)+1, min_len), dtype=torch.long)
+        len(word)+1, min_len), device=args.device, dtype=torch.long)
     inputs[:] = n_chars
     for i, example in enumerate(examples, 0):
         idxs = [letterToIndex(l) for l in example]
-        inputs[i][:len(example)] = torch.tensor(idxs, dtype=torch.long)
-    labels = torch.zeros(len(examples), dtype=torch.long)
+        inputs[i][:len(example)] = torch.tensor(idxs, device=args.device, dtype=torch.long)
+    labels = torch.zeros(len(examples), device=args.device, dtype=torch.long)
     labels[0] = 1
     return inputs, labels
 
