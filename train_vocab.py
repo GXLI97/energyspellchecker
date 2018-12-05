@@ -21,7 +21,7 @@ def train(args, model, optimizer, criterion, train_loader, epoch):
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
-        if batch_idx * train_loader.batch_size % 1000 == 0:
+        if batch_idx * train_loader.batch_size % 10 == 0:
             print('\rTrain Epoch: {} [{}/{} ({:.0f}%)] Loss: {:.6f}'.format(
                 epoch, batch_idx * (train_loader.batch_size), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()/train_loader.batch_size), end='')
