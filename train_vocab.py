@@ -84,7 +84,7 @@ def main():
     print("Using Device: {}".format(args.device))
 
     # instantiate CNN, loss, and optimizer.
-    model = CNN(n_chars, 10, 1, 512, [1, 2, 3, 4, 5, 6], 0.5, 1).to(device=args.device)
+    model = CNN(n_chars, 10, 1, 512, [1, 2, 3, 4, 5, 6], 0.25, 1).to(device=args.device)
     criterion = Energy_Loss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
