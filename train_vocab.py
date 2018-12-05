@@ -21,7 +21,7 @@ def train(args, model, optimizer, criterion, train_loader, epoch):
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
-        if batch_idx * train_loader.batch_size % 1000 == 0:
+        if batch_idx * train_loader.batch_size % 10 == 0:
             print('\rTrain Epoch: {} [{}/{} ({:.0f}%)] Loss: {:.6f}'.format(
                 epoch, batch_idx * (train_loader.batch_size), len(train_loader.dataset),
                 100. * batch_idx / len(train_loader), loss.item()/train_loader.batch_size), end='')
@@ -84,7 +84,7 @@ def main():
     print("Using Device: {}".format(args.device))
 
     # instantiate CNN, loss, and optimizer.
-    model = CNN(n_chars, 10, 1, 512, [1, 2, 3, 4, 5, 6], 0.25, 1).to(device=args.device)
+    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6], 0.25, 1).to(device=args.device)
     criterion = Energy_Loss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 
