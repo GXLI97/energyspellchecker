@@ -17,6 +17,7 @@ def train(args, model, optimizer, criterion, train_loader, epoch):
             input, target = input.cuda(args.device, non_blocking=True), target.cuda(args.device, non_blocking=True)
         optimizer.zero_grad()
         output = model(input)
+        # output.register_hook(print)
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
@@ -67,8 +68,8 @@ def main():
                         help='learning rate (default: 0.001)')
     parser.add_argument('--train_num_neg', type=int, default=15,
                         help='number of negative examples in each training batch (default: 15)')
-    parser.add_argument('--batch_size', type=int, default=25,
-                        help='number of examples in each batch (default: 25)')
+    parser.add_argument('--batch_size', type=int, default=10,
+                        help='number of examples in each batch (default: 10)')
     parser.add_argument('--test_num_neg', type=int, default=9,
                         help='number of negative examples in each test (default: 9)')
     parser.add_argument('--num_workers', type=int, default=4,
@@ -83,7 +84,7 @@ def main():
     print("Using Device: {}".format(args.device))
 
     # instantiate CNN, loss, and optimizer.
-    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6], 0.1, 1).to(device=args.device)
+    model = CNN(n_chars, 10, 1, 512, [1, 2, 3, 4, 5, 6], 0.1, 1).to(device=args.device)
     criterion = Energy_Loss()
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
 

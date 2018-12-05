@@ -16,6 +16,7 @@ class Energy_Loss(torch.nn.Module):
         # x = x/torch.norm(x, p=2)
         loss1 = torch.sum(x*y)/torch.sum(y)
         loss2 = 1/self.B + torch.logsumexp(-self.B * x, dim=0)
+        # loss2 = -torch.logsumexp(x,dim=0)
         loss = loss1 + loss2
         # print("{:.2f} {:.2f}".format(loss1.item(), loss2.item()))
         return loss
