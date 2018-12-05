@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 class Energy_Loss(torch.nn.Module):
 
-    def __init__(self, Beta=1):
+    def __init__(self, Beta=0.1):
         super(Energy_Loss, self).__init__()
         self.B = Beta
 
