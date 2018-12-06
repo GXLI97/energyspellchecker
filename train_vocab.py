@@ -17,14 +17,13 @@ def train(args, model, optimizer, criterion, train_loader, epoch):
             input, target = input.cuda(args.device, non_blocking=True), target.cuda(args.device, non_blocking=True)
         optimizer.zero_grad()
         output = model(input)
-        # output.register_hook(print)
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
-        if batch_idx * train_loader.batch_size % 10 == 0:
+        if (batch_idx) * train_loader.batch_size % args.log_rate == 0:
             print('\rTrain Epoch: {} [{}/{} ({:.0f}%)] Loss: {:.6f}'.format(
-                epoch, batch_idx * (train_loader.batch_size), len(train_loader.dataset),
-                100. * batch_idx / len(train_loader), loss.item()/train_loader.batch_size), end='')
+                epoch, (batch_idx) * (train_loader.batch_size), len(train_loader.dataset),
+                100. * (batch_idx) / len(train_loader), loss.item()/train_loader.batch_size), end='')
     print()
 
 
@@ -42,9 +41,9 @@ def test(args, model, criterion, test_loader, n=1000):
                 input, target = input.cuda(args.device, non_blocking=True), target.cuda(args.device, non_blocking=True)
             outputs = model(input)
             test_loss += criterion(outputs, target)
-            v, i = outputs.min(0)
+            v, j = outputs.min(1)
             # first element is smallest
-            if i == 0:
+            if j == 0:
                 correct += 1
             total += 1
     print("Test: Avg Loss: {:.3f}, Accuracy: {:.3f}".format(
@@ -72,6 +71,10 @@ def main():
                         help='number of examples in each batch (default: 10)')
     parser.add_argument('--test_num_neg', type=int, default=9,
                         help='number of negative examples in each test (default: 9)')
+    parser.add_argument('--beta', type=float, default=1, metavar='B',
+                        help='Inverse Temperature value for Energy function (default: 1)')
+    parser.add_argument('--log_rate', type=float, default=1000,
+                        help='number of samples per log (default: 1000)')
     parser.add_argument('--num_workers', type=int, default=8,
                         help='number of dataloader workers (default: 8)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
@@ -81,19 +84,24 @@ def main():
     args.use_cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.use_cuda else "cpu")
     kwargs = {'num_workers': args.num_workers, 'pin_memory': True} if args.use_cuda else {}
-    print("Using Device: {}".format(args.device))
+    print("Using Device: {} with {} workers".format(args.device, args.num_workers))
 
     # instantiate CNN, loss, and optimizer.
+    print("Initializing Model...")
     model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6], 0.25, 1).to(device=args.device)
-    criterion = Energy_Loss()
+    print("Initializing Energy Loss with beta = {}".format(args.beta))
+    criterion = Energy_Loss(beta=args.beta)
+    print("Initializing Adam optimizer with lr = {}".format(args.lr))
     optimizer = optim.Adam(model.parameters(), lr=args.lr)
-
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
+    print("Using wikipedia vocab of size = {}".format(len(vocab)))
 
     if args.ttsplit:
+        print("Train/Test Splitting - Enabled")
         # default use 0.8 train-test split...
         trainset, testset = traintest_split(vocab, p=0.8)
     else:
+        print("Train/Test Splitting - Disabled")
         trainset, testset = vocab, vocab
 
     train_dset = Dataset(trainset, args.train_num_neg)

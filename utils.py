@@ -118,7 +118,7 @@ def nce(word, vocab, num_neg):
     examples = []
     word = list(word)
     examples.append(word)
-    for i in range(num_neg):
+    while len(examples) != num_neg + 1:
         neg = get_random_negative(word, vocab)
         if neg is not None:
             examples.append(neg)
@@ -129,12 +129,17 @@ def nce(word, vocab, num_neg):
 
 
 def collate_fn(batch):
-    vec_examples = list(itertools.chain(*[b[0] for b in batch]))
-    vec_lengths = torch.tensor([len(seq)
-                                for seq in vec_examples], dtype=torch.long)
-    inputs = torch.zeros(len(vec_examples), max(
-        vec_lengths.max(), min_len), dtype=torch.long)
-    for idx, (seq, seqlen) in enumerate(zip(vec_examples, vec_lengths)):
-        inputs[idx, :seqlen] = torch.tensor(seq, dtype=torch.long)
-    targets = torch.cat([b[1] for b in batch], 0)
+    # B X E X MaxD.
+    d1 = len(batch) # args.batch_size
+    d2 = len(batch[0][0]) # 1 + args.num_neg
+    d3 = max([len(ex) for exs in batch for ex in exs[0]]) # max length of words in batch.
+
+    inputs = torch.zeros(d1, d2, max(d3, min_len), dtype=torch.long)
+    # UNDER CONSTRUCTION
+    for idx1, b in enumerate(batch):
+        vec_lengths = torch.tensor([len(seq) for seq in b[0]], dtype=torch.long)
+        for idx2, (vec, veclen) in enumerate(zip(b[0], vec_lengths)):
+            inputs[idx1][idx2][:veclen] = torch.tensor(vec, dtype=torch.long)
+    # B X E
+    targets = torch.cat([b[1].unsqueeze(0) for b in batch], 0)
     return inputs, targets

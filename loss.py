@@ -4,19 +4,13 @@ import torch.nn.functional as F
 
 class Energy_Loss(torch.nn.Module):
 
-    def __init__(self, Beta=0.5):
+    def __init__(self, beta=1):
         super(Energy_Loss, self).__init__()
-        self.B = Beta
+        self.B = beta
 
     def forward(self, x, y):
-        # calculate some loss.
-        x = x.squeeze(1)
         y = y.type(torch.float)
-        # normalize trick to ensure that x predictions don't blow up.
-        # x = x/torch.norm(x, p=2)
-        loss1 = torch.sum(x*y)/torch.sum(y)*self.B
-        loss2 = 1/self.B + torch.logsumexp(-self.B * x, dim=0)
-        # loss2 = -torch.logsumexp(x,dim=0)
+        loss1 = torch.sum(x*y)
+        loss2 = 1/self.B * torch.sum(torch.logsumexp(-self.B * x, dim=1))
         loss = loss1 + loss2
-        # print("{:.2f} {:.2f}".format(loss1.item(), loss2.item()))
         return loss

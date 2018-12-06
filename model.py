@@ -23,16 +23,20 @@ class CNN(nn.Module):
         self.fc1 = nn.Linear(len(Ks)*Co, Out)
 
     def forward(self, input):
-        # input is (N, W)
+        # input is (B, N, W)
         # N is number of examples in minibatch
         # W is length of each example (maximum word length)
-        x = self.embedding(input)  # (N, W, D)
-        x = x.unsqueeze(1)  # (N, 1, W, D)
+        # squash the batche examples into one dimension (B*N, W)
+        x = input.view(-1,input.size(2))
+        x = self.embedding(x)  # (B*N, W, D)
+        x = x.unsqueeze(1)  # (B*N, 1, W, D)
         x = [F.relu(conv(x)).squeeze(3)
-             for conv in self.convs1]  # [(N, Co, Lk) for K in Ks]
+             for conv in self.convs1]  # [(B*N, Co, Lk) for K in Ks]
         x = [F.max_pool1d(i, i.size(2)).squeeze(2)
-             for i in x]  # [(N, Co) for K in Ks]
-        x = torch.cat(x, 1)  # (N, Co * len(Ks))
+             for i in x]  # [(B*N, Co) for K in Ks]
+        x = torch.cat(x, 1)  # (B*N, Co * len(Ks))
         x = self.dropout(x)
-        x = self.fc1(x)  # (N, Out)
+        x = self.fc1(x)  # (B*N, Out)
+        # unsquash.
+        x = x.view(input.size(0),input.size(1)) # (B, N, Out)
         return x
