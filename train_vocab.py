@@ -35,8 +35,6 @@ def test(args, model, criterion, test_loader, n=1000):
     test_loss = 0.0
     with torch.no_grad():
         for i, (input, target) in enumerate(test_loader):
-            if i == n:
-                break
             if args.use_cuda:
                 input, target = input.cuda(args.device, non_blocking=True), target.cuda(args.device, non_blocking=True)
             outputs = model(input)
