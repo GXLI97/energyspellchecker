@@ -20,7 +20,8 @@ class CNN(nn.Module):
         self.convs1 = nn.ModuleList(
             [nn.Conv2d(Ci, Co, kernel_size=(K, D)) for K in Ks])
         self.dropout = nn.Dropout(Drop)
-        self.fc1 = nn.Linear(len(Ks)*Co, Out)
+        self.fc1 = nn.Linear(len(Ks)*Co, 500)
+        self.fc2 = nn.Linear(500, Out)
 
     def forward(self, input):
         # input is (B, N, W)
@@ -36,7 +37,8 @@ class CNN(nn.Module):
              for i in x]  # [(B*N, Co) for K in Ks]
         x = torch.cat(x, 1)  # (B*N, Co * len(Ks))
         x = self.dropout(x)
-        x = self.fc1(x)  # (B*N, Out)
+        x = F.relu(self.fc1(x))  # (B*N, Out)
+        x = self.fc2(x)
         # unsquash.
         x = x.view(input.size(0),input.size(1)) # (B, N, Out)
         return x
