@@ -60,8 +60,8 @@ def main():
                         help="train on top k most common words in vocabulary (default: 50000)")
     parser.add_argument('--epochs', type=int, default=25, metavar='N',
                         help='number of epochs to train (default: 25)')
-    parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
-                        help='learning rate (default: 0.01)')
+    parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
+                        help='learning rate (default: 0.001)')
     parser.add_argument('--train_num_neg', type=int, default=31,
                         help='number of negative examples in each training batch (default: 31)')
     parser.add_argument('--batch_size', type=int, default=25,
@@ -89,7 +89,7 @@ def main():
     print("Initializing Energy Loss with beta = {}".format(args.beta))
     criterion = Energy_Loss(beta=args.beta)
     print("Initializing Adam optimizer with lr = {}".format(args.lr))
-    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9)
+    optimizer = optim.Adam(model.parameters(), lr=args.lr)
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
     print("Using wikipedia vocab of size = {}".format(len(vocab)))
 
