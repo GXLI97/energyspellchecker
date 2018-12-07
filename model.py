@@ -37,8 +37,8 @@ class CNN(nn.Module):
              for i in x]  # [(B*N, Co) for K in Ks]
         x = torch.cat(x, 1)  # (B*N, Co * len(Ks))
         x = self.dropout(x)
-        x = F.relu(self.fc1(x))  # (B*N, Out)
-        x = self.fc2(x)
+        x = F.relu(self.fc1(x))  # (B*N, 500)
+        x = self.fc2(x) #(B*N, Out)
         # unsquash.
         x = x.view(input.size(0),input.size(1)) # (B, N, Out)
         return x
