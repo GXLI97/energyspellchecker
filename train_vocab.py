@@ -40,10 +40,9 @@ def test(args, model, criterion, test_loader, n=1000):
             outputs = model(input)
             test_loss += criterion(outputs, target)
             v, j = outputs.min(1)
-            # first element is smallest
-            if j == 0:
-                correct += 1
-            total += 1
+            # correct ones are 0.
+            correct += test_loader.batch_size - torch.nonzero(j).size()[0]
+            total += test_loader.batch_size
     print("Test: Avg Loss: {:.3f}, Accuracy: {:.3f}".format(
         test_loss/total, correct/total))
 
@@ -69,8 +68,8 @@ def main():
                         help='number of examples in each batch (default: 10)')
     parser.add_argument('--test_num_neg', type=int, default=9,
                         help='number of negative examples in each test (default: 9)')
-    parser.add_argument('--beta', type=float, default=1, metavar='B',
-                        help='Inverse Temperature value for Energy function (default: 1)')
+    parser.add_argument('--beta', type=float, default=0.5, metavar='B',
+                        help='Inverse Temperature value for Energy function (default: 0.5)')
     parser.add_argument('--log_rate', type=float, default=1000,
                         help='number of samples per log (default: 1000)')
     parser.add_argument('--num_workers', type=int, default=8,
@@ -106,7 +105,7 @@ def main():
     train_loader = DataLoader(train_dset, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn, **kwargs)
 
     test_dset = Dataset(testset, args.test_num_neg)
-    test_loader = DataLoader(test_dset, batch_size=1, shuffle=True, collate_fn=collate_fn, **kwargs)
+    test_loader = DataLoader(test_dset, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn, **kwargs)
 
     start = time.time()
     for epoch in range(1, args.epochs + 1):
