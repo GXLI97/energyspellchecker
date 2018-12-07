@@ -15,7 +15,7 @@ def train(args, model, optimizer, criterion, train_loader, epoch):
     for batch_idx, (input, target) in enumerate(train_loader):
         if args.use_cuda:
             input, target = input.cuda(args.device, non_blocking=True), target.cuda(args.device, non_blocking=True)
-        optimizer.zero_grad()
+        optimizer.zero_grad()``
         output = model(input)
         loss = criterion(output, target)
         loss.backward()
@@ -60,20 +60,20 @@ def main():
                         help="train on top k most common words in vocabulary (default: 50000)")
     parser.add_argument('--epochs', type=int, default=25, metavar='N',
                         help='number of epochs to train (default: 25)')
-    parser.add_argument('--lr', type=float, default=0.001, metavar='LR',
-                        help='learning rate (default: 0.001)')
-    parser.add_argument('--train_num_neg', type=int, default=15,
-                        help='number of negative examples in each training batch (default: 15)')
-    parser.add_argument('--batch_size', type=int, default=10,
-                        help='number of examples in each batch (default: 10)')
+    parser.add_argument('--lr', type=float, default=0.01, metavar='LR',
+                        help='learning rate (default: 0.01)')
+    parser.add_argument('--train_num_neg', type=int, default=31,
+                        help='number of negative examples in each training batch (default: 31)')
+    parser.add_argument('--batch_size', type=int, default=25,
+                        help='number of examples in each batch (default: 25)')
     parser.add_argument('--test_num_neg', type=int, default=9,
                         help='number of negative examples in each test (default: 9)')
     parser.add_argument('--beta', type=float, default=1, metavar='B',
                         help='Inverse Temperature value for Energy function (default: 1)')
     parser.add_argument('--log_rate', type=float, default=1000,
                         help='number of samples per log (default: 1000)')
-    parser.add_argument('--num_workers', type=int, default=8,
-                        help='number of dataloader workers (default: 8)')
+    parser.add_argument('--num_workers', type=int, default=15,
+                        help='number of dataloader workers (default: 15)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
 
