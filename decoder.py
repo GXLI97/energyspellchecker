@@ -10,46 +10,46 @@ import numpy as np
 
 
 def decode(args, model, neg, topk):
-    inputs = buildall(neg)
-    inputs = inputs.to(args.device)
-    scores = model(inputs)
-    vals, idxs = torch.topk(scores, topk, dim=0, largest=False)
-    inputs_topk = inputs[idxs]
+    inputs = build_all(args, neg)
+    if args.use_cuda:
+            inputs = inputs.cuda(args.device, non_blocking=True)
+    outputs = model(inputs)
+    vals, idxs = torch.topk(outputs, topk, dim=1, largest=False)
+    inputs_topk = inputs[0][idxs].squeeze(0)
     decodes = []
     for i in range(topk):
         decode_i = inputs_topk[i]
         decode_i = ''.join([all_letters[j]
-                            for j in decode_i.squeeze(0) if j != n_chars])
+                            for j in decode_i.squeeze(0) if j != 0])
         decodes.append(decode_i)
     return decodes
 
 
-def test_decoder(model, data, n=100, topk=10):
+def test_decoder(args, model, vocab, topk=1):
     model.eval()
-
     correct = 0
     total = 0
-
-    # yes = []
-    # no = []
-    for i in range(n):
-        word = random.choice(data)
-        if len(word) < 4:
-            continue
-        neg = get_random_negative(list(word), data)
-        word_decodes = decode(args, model, neg, topk)
-        # at least one of topk words in vocab
-        # if [i for i in word_decodes if i in data]:
-        # correct word is amongst topk
-        if word in word_decodes:
-            correct += 1
-        # else:
-        #     print(word, word_decode)
-        total += 1
-        # yes.append(freq_dict[word])
-        # else:
-        # print(word, word_bad, word_decode)
-        # no.append(freq_dict[word])
+    with torch.no_grad():
+        for i, word in enumerate(vocab):
+            neg = None
+            while neg is None:
+                neg = get_random_negative(list(word), vocab)
+            word_decodes = decode(args, model, neg, topk)
+            print(word_decodes)
+            # at least one of topk words in vocab
+            if [i for i in word_decodes if i in vocab]:
+                correct += 1
+            total += 1
+            # correct word is amongst topk
+            # if word in word_decodes:
+                
+            # else:
+            #     print(word, word_decode)
+            
+            # yes.append(freq_dict[word])
+            # else:
+            # print(word, word_bad, word_decode)
+            # no.append(freq_dict[word])
     print(correct/total)
 
     # import matplotlib.pyplot as plt
@@ -74,19 +74,19 @@ def main():
                         help='vocabulary file path')
     parser.add_argument('--model_save_file', type=str, default='models/energy_cnn',
                         help='model save path')
-    parser.add_argument('--topk', type=int, default=10000,
+    parser.add_argument('--topk', type=int, default=50000,
                         help="train on top k most common words in vocabulary")
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
+    
     args = parser.parse_args()
-    use_cuda = not args.no_cuda and torch.cuda.is_available()
-    args.device = torch.device("cuda" if use_cuda else "cpu")
+    args.use_cuda = not args.no_cuda and torch.cuda.is_available()
+    args.device = torch.device("cuda" if args.use_cuda else "cpu")
     print(args.device)
 
     # instantiate CNN, loss, and optimizer.
-    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6], 0.1, 1)
+    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7], 0.25, 1).to(device=args.device)
     model.load_state_dict(torch.load(args.model_save_file))
-    model = model.to(device)
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
 
     test_decoder(args, model, vocab)

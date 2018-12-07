@@ -62,7 +62,8 @@ def get_random_negative(word, vocab):
         return None
 
 
-def buildall(args, neg):
+def build_all(args, neg):
+    # TODO FIX THIS
     examples = []
     neg = list(neg)
     examples.append(neg)
@@ -88,13 +89,12 @@ def buildall(args, neg):
             word = neg.copy()
             word[k] = l
             examples.append(word)
-    inputs = torch.empty(len(examples), max(
+    inputs = torch.zeros(1, len(examples), max(
         len(word)+1, min_len), device=args.device, dtype=torch.long)
-    inputs[:] = n_chars
-    for i, example in enumerate(examples, 0):
-        idxs = [letterToIndex(l) for l in example]
-        inputs[i][:len(example)] = torch.tensor(
-            idxs, device=args.device, type=torch.long)
+    for i, ex in enumerate(examples, 0):
+        vec_examples = [tok2index[tok] for tok in ex]
+        inputs[0][i][:len(ex)] = torch.tensor(
+            vec_examples, device=args.device, dtype=torch.long)
     return inputs
 
 
