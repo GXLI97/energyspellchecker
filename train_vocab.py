@@ -89,7 +89,7 @@ def main():
     print("Initializing Energy Loss with beta = {}".format(args.beta))
     criterion = Energy_Loss(beta=args.beta)
     print("Initializing Adam optimizer with lr = {}".format(args.lr))
-    optimizer = optim.Adam(model.parameters(), lr=args.lr)
+    optimizer = optim.SGD(model.parameters(), lr=args.lr, momentum=0.9)
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
     print("Using wikipedia vocab of size = {}".format(len(vocab)))
 
