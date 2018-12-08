@@ -25,7 +25,7 @@ def decode(args, model, neg, topk):
     return decodes
 
 
-def test_decoder(args, model, vocab, topk=1):
+def test_decoder(args, model, vocab, topk=5):
     model.eval()
     correct = 0
     total = 0
@@ -35,11 +35,11 @@ def test_decoder(args, model, vocab, topk=1):
             while neg is None:
                 neg = get_random_negative(list(word), vocab)
             word_decodes = decode(args, model, neg, topk)
-            print(word_decodes)
             # at least one of topk words in vocab
             if [i for i in word_decodes if i in vocab]:
                 correct += 1
             total += 1
+
             # correct word is amongst topk
             # if word in word_decodes:
                 
@@ -86,7 +86,11 @@ def main():
 
     # instantiate CNN, loss, and optimizer.
     model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7], 0.25, 1).to(device=args.device)
-    model.load_state_dict(torch.load(args.model_save_file))
+    # TODO: understand why this works...
+    if args.use_cuda:
+        model.load_state_dict(torch.load(args.model_save_file))
+    else:
+        model.load_state_dict(torch.load(args.model_save_file, map_location=lambda storage, loc: storage))
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
 
     test_decoder(args, model, vocab)
