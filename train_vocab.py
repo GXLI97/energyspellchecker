@@ -64,8 +64,8 @@ def main():
                         help='learning rate (default: 0.001)')
     parser.add_argument('--train_num_neg', type=int, default=31,
                         help='number of negative examples in each training batch (default: 31)')
-    parser.add_argument('--batch_size', type=int, default=25,
-                        help='number of examples in each batch (default: 25)')
+    parser.add_argument('--batch_size', type=int, default=4,
+                        help='number of examples in each batch (default: 4)')
     parser.add_argument('--test_num_neg', type=int, default=9,
                         help='number of negative examples in each test (default: 9)')
     parser.add_argument('--beta', type=float, default=1, metavar='B',
