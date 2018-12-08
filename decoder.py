@@ -7,6 +7,7 @@ from model import CNN
 from loss import Energy_Loss
 from utils import *
 import numpy as np
+import time
 
 
 def decode(args, model, neg, topk):
@@ -92,8 +93,9 @@ def main():
     else:
         model.load_state_dict(torch.load(args.model_save_file, map_location=lambda storage, loc: storage))
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
-
+    start = time.time()
     test_decoder(args, model, vocab)
+    print("Decoding time: {} sec".format(time.time()-start))
 
 
 if __name__ == "__main__":
