@@ -41,6 +41,9 @@ def test_decoder(args, model, vocab, topk=5):
                 correct += 1
             total += 1
 
+            if i % 1000 = 0:
+                print(i)
+
             # correct word is amongst topk
             # if word in word_decodes:
                 
