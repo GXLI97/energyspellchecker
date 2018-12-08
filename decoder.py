@@ -86,7 +86,7 @@ def main():
     print(args.device)
 
     # instantiate CNN, loss, and optimizer.
-    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7], 0.25, 1).to(device=args.device)
+    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7, 8], 0.25, 1).to(device=args.device)
     # TODO: understand why this works...
     if args.use_cuda:
         model.load_state_dict(torch.load(args.model_save_file))

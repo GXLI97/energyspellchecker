@@ -19,8 +19,8 @@ class CNN(nn.Module):
         self.convs1 = nn.ModuleList(
             [nn.Conv2d(Ci, Co, kernel_size=(K, D)) for K in Ks])
         self.dropout = nn.Dropout(Drop)
-        self.fc1 = nn.Linear(len(Ks)*Co, 500)
-        self.fc2 = nn.Linear(500, Out)
+        self.fc1 = nn.Linear(len(Ks)*Co, 1000)
+        self.fc2 = nn.Linear(1000, Out)
 
     def forward(self, input):
         # input is (B, N, W)
