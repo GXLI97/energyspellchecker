@@ -19,12 +19,12 @@ def decode(args, model, neg, topd):
         outputs = model(inputs)
         vals, idxs = torch.topk(outputs, topd, dim=1, largest=False)
         inputs_topd = inputs[0][idxs].squeeze(0)
-        decodes = []
+        decodes = set()
         for i in range(topd):
             decode_i = inputs_topd[i]
             decode_i = ''.join([all_letters[j]
                                 for j in decode_i.squeeze(0) if j != 0])
-            decodes.append(decode_i)
+            decodes.add(decode_i)
         del inputs
         del outputs
         return in_size, decodes
@@ -35,7 +35,7 @@ def decode(args, model, neg, topd):
 
 def test_decoder(args, model, vocab, topd=5):
     model.eval()
-    vocab = set(vocab)  # faster lookup
+    vocabset = set(vocab)  # faster lookup
     correct = 0
     total = 0
     tot_in_size = 0
@@ -43,10 +43,10 @@ def test_decoder(args, model, vocab, topd=5):
         for i, word in enumerate(vocab):
             neg = None
             while neg is None:
-                neg = get_random_negative(list(word), vocab)
+                neg = get_random_negative(list(word), vocabset)
             in_size, word_decodes = decode(args, model, neg, topd)
             # at least one of topk words in vocab
-            if [i for i in word_decodes if i in vocab]:
+            if word_decodes.intersection(vocabset):
                 correct += 1
             tot_in_size += in_size
             total += 1
