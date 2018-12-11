@@ -54,6 +54,7 @@ def test_decoder(args, model, vocab, topd=5):
                 print("\rDecoded [{}/{}] ({:.0f}%) words, Acc: {:.3f}, avg_len: {:.0f}"
                       .format(i, args.topk, 100. * i/args.topk, correct/total, tot_in_size/total), end='')
                 torch.cuda.empty_cache()
+                print()
                 print(torch.cuda.memory_allocated())
     # import matplotlib.pyplot as plt
     # start = 10
