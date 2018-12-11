@@ -77,7 +77,7 @@ def main():
                         help='model save path')
     parser.add_argument('--topk', type=int, default=100000,
                         help="train on top k most common words in vocabulary")
-    parser.add_argument('--topd', type=int, default=5,
+    parser.add_argument('--topd', type=int, default=1,
                         help="evaluate success on top decode choices")
     parser.add_argument('--log_rate', type=float, default=1000,
                         help='number of samples per log (default: 1000)')
