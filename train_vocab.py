@@ -64,16 +64,16 @@ def main():
                         help='learning rate (default: 0.001)')
     parser.add_argument('--train_num_neg', type=int, default=31,
                         help='number of negative examples in each training batch (default: 31)')
-    parser.add_argument('--batch_size', type=int, default=4,
-                        help='number of examples in each batch (default: 4)')
+    parser.add_argument('--batch_size', type=int, default=50,
+                        help='number of examples in each batch (default: 50)')
     parser.add_argument('--test_num_neg', type=int, default=9,
                         help='number of negative examples in each test (default: 9)')
     parser.add_argument('--beta', type=float, default=1, metavar='B',
                         help='Inverse Temperature value for Energy function (default: 1)')
     parser.add_argument('--log_rate', type=float, default=1000,
                         help='number of samples per log (default: 1000)')
-    parser.add_argument('--num_workers', type=int, default=15,
-                        help='number of dataloader workers (default: 15)')
+    parser.add_argument('--num_workers', type=int, default=1,
+                        help='number of dataloader workers (default: 1)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
 
