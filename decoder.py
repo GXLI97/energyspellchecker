@@ -71,7 +71,7 @@ def main():
                         help="train on top k most common words in vocabulary")
     parser.add_argument('--topd', type=int, default=5,
                         help="evaluate success on top decode choices")
-    parser.add_argument('--log_rate', type=float, default=10,
+    parser.add_argument('--log_rate', type=float, default=1000,
                         help='number of samples per log (default: 1000)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
