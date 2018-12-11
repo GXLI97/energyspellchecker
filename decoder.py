@@ -12,6 +12,7 @@ import time
 
 def decode(args, model, neg, topd):
     inputs = build_all(neg)
+    print(inputs.size(1))
     try:
         if args.use_cuda:
             inputs = inputs.cuda(args.device, non_blocking=True)
