@@ -12,18 +12,22 @@ import time
 
 def decode(args, model, neg, topd):
     inputs = build_all(neg)
-    if args.use_cuda:
-        inputs = inputs.cuda(args.device, non_blocking=True)
-    outputs = model(inputs)
-    vals, idxs = torch.topk(outputs, topd, dim=1, largest=False)
-    inputs_topd = inputs[0][idxs].squeeze(0)
-    decodes = []
-    for i in range(topd):
-        decode_i = inputs_topd[i]
-        decode_i = ''.join([all_letters[j]
-                            for j in decode_i.squeeze(0) if j != 0])
-        decodes.append(decode_i)
-    return inputs.size(1), decodes
+    try:
+        if args.use_cuda:
+            inputs = inputs.cuda(args.device, non_blocking=True)
+        outputs = model(inputs)
+        vals, idxs = torch.topk(outputs, topd, dim=1, largest=False)
+        inputs_topd = inputs[0][idxs].squeeze(0)
+        decodes = []
+        for i in range(topd):
+            decode_i = inputs_topd[i]
+            decode_i = ''.join([all_letters[j]
+                                for j in decode_i.squeeze(0) if j != 0])
+            decodes.append(decode_i)
+        return inputs.size(1), decodes
+    except:
+        print("Inputs too big: {}".format(inputs.size(1)))
+        return inputs.size(1), []
 
 
 def test_decoder(args, model, vocab, topd=5):
