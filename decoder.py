@@ -12,7 +12,7 @@ import time
 
 def decode(args, model, neg, topd):
     inputs = build_all(neg)
-    print(inputs.size(1))
+    in_size = inputs.size(1)
     try:
         if args.use_cuda:
             inputs = inputs.cuda(args.device, non_blocking=True)
@@ -25,10 +25,12 @@ def decode(args, model, neg, topd):
             decode_i = ''.join([all_letters[j]
                                 for j in decode_i.squeeze(0) if j != 0])
             decodes.append(decode_i)
-        return inputs.size(1), decodes
+        del inputs
+        del outputs
+        return in_size, decodes
     except:
         print("Inputs too big: {}".format(inputs.size(1)))
-        return inputs.size(1), []
+        return in_size, []
 
 
 def test_decoder(args, model, vocab, topd=5):
