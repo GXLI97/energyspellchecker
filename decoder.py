@@ -13,7 +13,7 @@ import time
 def decode(args, model, neg, topd):
     inputs = build_all(neg)
     if args.use_cuda:
-            inputs = inputs.cuda(args.device, non_blocking=True)
+        inputs = inputs.cuda(args.device, non_blocking=True)
     outputs = model(inputs)
     vals, idxs = torch.topk(outputs, topd, dim=1, largest=False)
     inputs_topd = inputs[0][idxs].squeeze(0)
@@ -23,28 +23,31 @@ def decode(args, model, neg, topd):
         decode_i = ''.join([all_letters[j]
                             for j in decode_i.squeeze(0) if j != 0])
         decodes.append(decode_i)
-    return decodes
+    return len(inputs), decodes
 
 
 def test_decoder(args, model, vocab, topd=5):
     model.eval()
-    vocab = set(vocab) # faster lookup
+    vocab = set(vocab)  # faster lookup
     correct = 0
     total = 0
+    tot_len_in = 0
     with torch.no_grad():
         for i, word in enumerate(vocab):
             neg = None
             while neg is None:
                 neg = get_random_negative(list(word), vocab)
-            word_decodes = decode(args, model, neg, topd)
+            len_in, word_decodes = decode(args, model, neg, topd)
             # at least one of topk words in vocab
             if [i for i in word_decodes if i in vocab]:
                 correct += 1
+            tot_len_in += len_in
             total += 1
             if i % args.log_rate == 0:
-                print("\rDecoded [{}/{}] words, Acc: {}".format(i, args.topk, correct/total), end='')
+                print("\rDecoded [{}/{}] ({:.0f}%) words, Acc: {}, avg_len: {}"
+                      .format(i, 100. * args.topk, i/args.topk, correct/total tot_len_in/total), end='')
     print(correct/total)
-    
+
     # import matplotlib.pyplot as plt
     # start = 10
     # end = 1000
@@ -83,16 +86,18 @@ def main():
 
     # instantiate CNN, loss, and optimizer.
     print("Loading Model from {}".format(args.model_save_file))
-    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7, 8], 0.25, 1).to(device=args.device)
+    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7, 8], 0.25, 1).to(
+        device=args.device)
     # some weird loading, TODO: test this out on gpu.
     if args.use_cuda:
         model.load_state_dict(torch.load(args.model_save_file))
     else:
-        model.load_state_dict(torch.load(args.model_save_file, map_location=lambda storage, loc: storage))
-    
+        model.load_state_dict(torch.load(
+            args.model_save_file, map_location=lambda storage, loc: storage))
+
     # load vocabulary.
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
-    
+
     print("Evaluating on top {} words".format(args.topk))
     print("Using top {} decodes for each word".format(args.topd))
     start = time.time()
