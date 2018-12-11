@@ -112,6 +112,7 @@ def main():
         train(args, model, optimizer, criterion, train_loader, epoch)
         test(args, model, criterion, test_loader)
         print("Total time: {} sec".format(time.time()-start))
+    print("Saving model to {}".format(args.model_save_file))
     torch.save(model.state_dict(), args.model_save_file)
 
 

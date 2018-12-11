@@ -10,24 +10,25 @@ import numpy as np
 import time
 
 
-def decode(args, model, neg, topk):
-    inputs = build_all(args, neg)
+def decode(args, model, neg, topd):
+    inputs = build_all(neg)
     if args.use_cuda:
             inputs = inputs.cuda(args.device, non_blocking=True)
     outputs = model(inputs)
-    vals, idxs = torch.topk(outputs, topk, dim=1, largest=False)
-    inputs_topk = inputs[0][idxs].squeeze(0)
+    vals, idxs = torch.topk(outputs, topd, dim=1, largest=False)
+    inputs_topd = inputs[0][idxs].squeeze(0)
     decodes = []
-    for i in range(topk):
-        decode_i = inputs_topk[i]
+    for i in range(topd):
+        decode_i = inputs_topd[i]
         decode_i = ''.join([all_letters[j]
                             for j in decode_i.squeeze(0) if j != 0])
         decodes.append(decode_i)
     return decodes
 
 
-def test_decoder(args, model, vocab, topk=5):
+def test_decoder(args, model, vocab, topd=5):
     model.eval()
+    vocab = set(vocab) # faster lookup
     correct = 0
     total = 0
     with torch.no_grad():
@@ -35,27 +36,15 @@ def test_decoder(args, model, vocab, topk=5):
             neg = None
             while neg is None:
                 neg = get_random_negative(list(word), vocab)
-            word_decodes = decode(args, model, neg, topk)
+            word_decodes = decode(args, model, neg, topd)
             # at least one of topk words in vocab
             if [i for i in word_decodes if i in vocab]:
                 correct += 1
             total += 1
-
-            if i % 1000 = 0:
-                print(i)
-
-            # correct word is amongst topk
-            # if word in word_decodes:
-                
-            # else:
-            #     print(word, word_decode)
-            
-            # yes.append(freq_dict[word])
-            # else:
-            # print(word, word_bad, word_decode)
-            # no.append(freq_dict[word])
+            if i % args.log_rate == 0:
+                print("\rDecoded [{}/{}] words, Acc: {}".format(i, args.topk, correct/total), end='')
     print(correct/total)
-
+    
     # import matplotlib.pyplot as plt
     # start = 10
     # end = 1000
@@ -80,24 +69,34 @@ def main():
                         help='model save path')
     parser.add_argument('--topk', type=int, default=50000,
                         help="train on top k most common words in vocabulary")
+    parser.add_argument('--topd', type=int, default=5,
+                        help="evaluate success on top decode choices")
+    parser.add_argument('--log_rate', type=float, default=10,
+                        help='number of samples per log (default: 1000)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
-    
     args = parser.parse_args()
+
     args.use_cuda = not args.no_cuda and torch.cuda.is_available()
     args.device = torch.device("cuda" if args.use_cuda else "cpu")
-    print(args.device)
+    print("Using Device: {}".format(args.device))
 
     # instantiate CNN, loss, and optimizer.
+    print("Loading Model from {}".format(args.model_save_file))
     model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7, 8], 0.25, 1).to(device=args.device)
-    # TODO: understand why this works...
+    # some weird loading, TODO: test this out on gpu.
     if args.use_cuda:
         model.load_state_dict(torch.load(args.model_save_file))
     else:
         model.load_state_dict(torch.load(args.model_save_file, map_location=lambda storage, loc: storage))
+    
+    # load vocabulary.
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
+    
+    print("Evaluating on top {} words".format(args.topk))
+    print("Using top {} decodes for each word".format(args.topd))
     start = time.time()
-    test_decoder(args, model, vocab)
+    test_decoder(args, model, vocab, args.topd)
     print("Decoding time: {} sec".format(time.time()-start))
 
 

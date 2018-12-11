@@ -62,8 +62,7 @@ def get_random_negative(word, vocab):
         return None
 
 
-def build_all(args, neg):
-    # TODO FIX THIS
+def build_all(neg):
     examples = []
     neg = list(neg)
     examples.append(neg)
@@ -90,11 +89,11 @@ def build_all(args, neg):
             word[k] = l
             examples.append(word)
     inputs = torch.zeros(1, len(examples), max(
-        len(word)+1, min_len), device=args.device, dtype=torch.long)
+        len(word)+1, min_len), dtype=torch.long)
     for i, ex in enumerate(examples, 0):
         vec_examples = [tok2index[tok] for tok in ex]
         inputs[0][i][:len(ex)] = torch.tensor(
-            vec_examples, device=args.device, dtype=torch.long)
+            vec_examples, dtype=torch.long)
     return inputs
 
 
@@ -103,6 +102,7 @@ class Dataset(data.Dataset):
     def __init__(self, vocab, num_neg):
         super(Dataset, self).__init__()
         self.vocab = vocab
+        self.vocabset = set(vocab)
         self.num_neg = num_neg
 
     def __len__(self):
@@ -110,7 +110,7 @@ class Dataset(data.Dataset):
 
     def __getitem__(self, index):
         word = self.vocab[index]
-        inputs, labels = nce(word, self.vocab, self.num_neg)
+        inputs, labels = nce(word, self.vocabset, self.num_neg)
         return inputs, labels
 
 
