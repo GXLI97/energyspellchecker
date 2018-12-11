@@ -45,7 +45,7 @@ def test_decoder(args, model, vocab, topd=5):
             total += 1
             if i % args.log_rate == 0:
                 print("\rDecoded [{}/{}] ({:.0f}%) words, Acc: {}, avg_len: {}"
-                      .format(i, 100. * args.topk, i/args.topk, correct/total, tot_len_in/total), end='')
+                      .format(i, i/args.topk, 100. * args.topk, correct/total, tot_len_in/total), end='')
     print(correct/total)
 
     # import matplotlib.pyplot as plt
