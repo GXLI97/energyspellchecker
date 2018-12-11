@@ -23,7 +23,7 @@ def decode(args, model, neg, topd):
         decode_i = ''.join([all_letters[j]
                             for j in decode_i.squeeze(0) if j != 0])
         decodes.append(decode_i)
-    return len(inputs), decodes
+    return inputs.size(1), decodes
 
 
 def test_decoder(args, model, vocab, topd=5):
@@ -31,21 +31,21 @@ def test_decoder(args, model, vocab, topd=5):
     vocab = set(vocab)  # faster lookup
     correct = 0
     total = 0
-    tot_len_in = 0
+    tot_in_size = 0
     with torch.no_grad():
         for i, word in enumerate(vocab):
             neg = None
             while neg is None:
                 neg = get_random_negative(list(word), vocab)
-            len_in, word_decodes = decode(args, model, neg, topd)
+            in_size, word_decodes = decode(args, model, neg, topd)
             # at least one of topk words in vocab
             if [i for i in word_decodes if i in vocab]:
                 correct += 1
-            tot_len_in += len_in
+            tot_in_size += in_size
             total += 1
             if i % args.log_rate == 0:
-                print("\rDecoded [{}/{}] ({:.0f}%) words, Acc: {}, avg_len: {}"
-                      .format(i, i/args.topk, 100. * args.topk, correct/total, tot_len_in/total), end='')
+                print("\rDecoded [{}/{}] ({:.0f}%) words, Acc: {:.3f}, avg_len: {:.0f}"
+                      .format(i, args.topk, 100. * i/args.topk, correct/total, tot_in_size/total), end='')
     print(correct/total)
 
     # import matplotlib.pyplot as plt
