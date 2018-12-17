@@ -1,6 +1,7 @@
 import argparse
 import time
 import random
+import numpy as np
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -26,9 +27,8 @@ def train(args, model, optimizer, criterion, train_loader, epoch):
                 100. * (batch_idx) / len(train_loader), loss.item()/train_loader.batch_size), end='')
     print()
 
-
-# train test split.
-def test(args, model, criterion, test_loader, n=1000):
+# tests model to make sure the correct word is the lowest energy
+def test1(args, model, criterion, test_loader):
     model.eval()
     correct = 0
     total = 0
@@ -43,9 +43,30 @@ def test(args, model, criterion, test_loader, n=1000):
             # correct ones are 0.
             correct += test_loader.batch_size - torch.nonzero(j).size()[0]
             total += test_loader.batch_size
-    print("Test: Avg Loss: {:.3f}, Accuracy: {:.3f}".format(
+    print("Test 1: Avg Loss: {:.3f}, Accuracy: {:.3f}".format(
         test_loss/total, correct/total))
 
+# test model to compare 5 correct and 5 incorrect words for energy level.
+def test2(args, model, criterion, test_loader):
+    model.eval()
+    correct = 0
+    total = 0
+    with torch.no_grad():
+        for i, (input, target) in enumerate(test_loader):
+            if args.use_cuda:
+                input, target = input.cuda(args.device, non_blocking=True), target.cuda(args.device, non_blocking=True)
+            outputs = model(input)
+            # ravel index into 1d
+            outputs = outputs.view(-1)
+            # get the top half.
+            v,i = torch.topk(outputs, test_loader.batch_size, largest=False)
+            # unravel index and then see if 2nd index set is all 0s
+            # meaning smallest energy levels in the first  column.
+            i1d = np.unravel_index(i, (test_loader.batch_size, 2))
+            if not np.any(i1d[1]):
+                correct += 1
+            total += 1
+    print("Test 2: Accuracy: {:.3f}".format(correct/total))
 
 def main():
     parser = argparse.ArgumentParser(
@@ -64,8 +85,8 @@ def main():
                         help='learning rate (default: 0.001)')
     parser.add_argument('--train_num_neg', type=int, default=31,
                         help='number of negative examples in each training batch (default: 31)')
-    parser.add_argument('--batch_size', type=int, default=50,
-                        help='number of examples in each batch (default: 50)')
+    parser.add_argument('--batch_size', type=int, default=25,
+                        help='number of examples in each batch (default: 25)')
     parser.add_argument('--test_num_neg', type=int, default=9,
                         help='number of negative examples in each test (default: 9)')
     parser.add_argument('--beta', type=float, default=1, metavar='B',
@@ -101,16 +122,22 @@ def main():
         print("Train/Test Splitting - Disabled")
         trainset, testset = vocab, vocab
 
-    train_dset = Dataset(trainset, args.train_num_neg)
+    train_dset = Dataset(trainset, num_neg=args.train_num_neg)
     train_loader = DataLoader(train_dset, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn, **kwargs)
 
-    test_dset = Dataset(testset, args.test_num_neg)
-    test_loader = DataLoader(test_dset, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn, **kwargs)
+    test1_dset = Dataset(testset, num_neg=args.test_num_neg)
+    test1_loader = DataLoader(test1_dset, batch_size=args.batch_size, shuffle=True, collate_fn=collate_fn, **kwargs)
+
+    test2_dset = Dataset(testset, num_neg=1)
+    test2_loader = DataLoader(test2_dset, batch_size=5, shuffle=True, collate_fn=collate_fn, **kwargs)
+
 
     start = time.time()
     for epoch in range(1, args.epochs + 1):
         train(args, model, optimizer, criterion, train_loader, epoch)
-        test(args, model, criterion, test_loader)
+        test1(args, model, criterion, test1_loader)
+        test2(args, model, criterion, test2_loader)
+
         print("Total time: {} sec".format(time.time()-start))
     print("Saving model to {}".format(args.model_save_file))
     torch.save(model.state_dict(), args.model_save_file)
