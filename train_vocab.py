@@ -50,6 +50,7 @@ def test1(args, model, criterion, test_loader):
 def test2(args, model, criterion, test_loader):
     model.eval()
     correct = 0
+    avg_top5 = 0
     total = 0
     with torch.no_grad():
         for i, (input, target) in enumerate(test_loader):
@@ -65,8 +66,9 @@ def test2(args, model, criterion, test_loader):
             i1d = np.unravel_index(i, (test_loader.batch_size, 2))
             if not np.any(i1d[1]):
                 correct += 1
+            avg_top5 += test_loader.batch_size - np.sum(i1d[1])
             total += 1
-    print("Test 2: Accuracy: {:.3f}".format(correct/total))
+    print("Test 2: Accuracy: {:.3f}, Avg # correct in top5: {:.3f}".format(correct/total, avg_top5/total))
 
 def main():
     parser = argparse.ArgumentParser(
