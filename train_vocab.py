@@ -108,7 +108,7 @@ def main():
 
     # instantiate CNN, loss, and optimizer.
     print("Initializing Model...")
-    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7, 8], 0.5, 1).to(device=args.device)
+    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7, 8], 0.2, 1).to(device=args.device)
     print("Initializing Energy Loss with beta = {}".format(args.beta))
     criterion = Energy_Loss(beta=args.beta)
     print("Initializing Adam optimizer with lr = {}".format(args.lr))
