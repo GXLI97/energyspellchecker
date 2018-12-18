@@ -38,8 +38,8 @@ class CNN(nn.Module):
         x = self.dropout(x)
         x = F.relu(self.fc1(x))  # (B*N, 500)
         x = self.fc2(x) #(B*N, Out)
-        x = (x-torch.mean(x))/torch.norm(x) # normalize
+        # TODO: try to normalize?
+        # x = (x-torch.mean(x))/torch.norm(x) # normalize
         # unsquash.
         x = x.view(input.size(0),input.size(1)) # (B, N, Out)
-        # TODO: try to batchnorm?
         return x
