@@ -10,17 +10,17 @@ import numpy as np
 import time
 
 
-def decode(args, model, neg, topd):
-    inputs = build_all(neg)
+def decode(args, model, neg):
+    inputs = build_all(neg, args.edit)
     in_size = inputs.size(1)
     try:
         if args.use_cuda:
             inputs = inputs.cuda(args.device, non_blocking=True)
         outputs = model(inputs)
-        vals, idxs = torch.topk(outputs, topd, dim=1, largest=False)
+        vals, idxs = torch.topk(outputs, args.topd, dim=1, largest=False)
         inputs_topd = inputs[0][idxs].squeeze(0)
         decodes = set()
-        for i in range(topd):
+        for i in range(args.topd):
             decode_i = inputs_topd[i]
             decode_i = ''.join([all_letters[j]
                                 for j in decode_i.squeeze(0) if j != 0])
@@ -33,7 +33,7 @@ def decode(args, model, neg, topd):
         return in_size, []
 
 
-def test_decoder(args, model, vocab, topd=5):
+def test_decoder(args, model, vocab):
     model.eval()
     vocabset = set(vocab)  # faster lookup
     correct = 0
@@ -41,12 +41,12 @@ def test_decoder(args, model, vocab, topd=5):
     tot_in_size = 0
     with torch.no_grad():
         for i, word in enumerate(vocab):
-            neg = None
-            while neg is None:
-                neg = get_random_negative(list(word), vocabset)
-            in_size, word_decodes = decode(args, model, neg, topd)
-            # at least one of topk words in vocab
-            if word_decodes.intersection(vocabset):
+            neg = get_random_negative(list(word), vocabset, args.edit)
+            if not neg:
+                continue
+            in_size, word_decodes = decode(args, model, neg)
+            # the correct word is in the topk.
+            if word in word_decodes:
                 correct += 1
             tot_in_size += in_size
             total += 1
@@ -83,6 +83,9 @@ def main():
                         help='number of samples per log (default: 1000)')
     parser.add_argument('--no-cuda', action='store_true', default=False,
                         help='disables CUDA training')
+    # some settings for training on specific edits.
+    parser.add_argument('--edit', type=int, default=0,
+                        help='choose a specific edit. 0:all, 1:swap, 2:add, 3:del, 4:replace')
     args = parser.parse_args()
 
     args.use_cuda = not args.no_cuda and torch.cuda.is_available()
@@ -106,7 +109,7 @@ def main():
     print("Evaluating on top {} words".format(args.topk))
     print("Using top {} decodes for each word".format(args.topd))
     start = time.time()
-    test_decoder(args, model, vocab, args.topd)
+    test_decoder(args, model, vocab)
     print("Decoding time: {} sec".format(time.time()-start))
 
 
