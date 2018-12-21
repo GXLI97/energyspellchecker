@@ -66,15 +66,14 @@ def get_random_negative(word, vocab, edit):
     elif edit == 1:
         edits = [r_swap]
     elif edit == 2:
-        edits = [r_add]
-    elif edit == 3:
-        edits = [r_del]
+        edits = [r_add, r_del]
     else:
         edits = [r_replace]
     neg = random.choice(edits)(neg)
     if "".join(neg)  in vocab:
         # just return null example.
         neg = []
+    # print("".join(neg))
     return neg
 
 
@@ -88,21 +87,19 @@ def build_all(neg, edit):
             word = neg.copy()
             word[k], word[k+1] = word[k+1], word[k]
             examples.append(word)
-    # dels->adds
-    if edit == 0 or edit == 3:
+    # add/del
+    if edit == 0 or edit == 2:
         for k in range(len(neg)):
             for l in all_letters:
                 word = neg.copy()
                 word.insert(k, l)
                 examples.append(word)
-    # adds->dels
-    if edit == 0 or edit == 2:
         for k in range(len(neg)):
             word = neg.copy()
             del word[k]
             examples.append(word)
     # replaces->replaces
-    if edit == 0 or edit == 4:
+    if edit == 0 or edit == 3:
         for k in range(len(neg)):
             for l in all_letters:
                 word = neg.copy()
@@ -143,8 +140,10 @@ def nce(word, vocab, num_neg, edit):
         neg = get_random_negative(word, vocab, edit)
         examples.append(neg)
     vec_examples = [[tok2index[tok] for tok in ex] for ex in examples]
+    # print(vec_examples)
     labels = torch.zeros(len(examples), dtype=torch.long)
     labels[0] = 1
+    # print(labels)
     return vec_examples, labels
 
 
@@ -164,4 +163,6 @@ def collate_fn(batch):
             inputs[idx1][idx2][:veclen] = torch.tensor(vec, dtype=torch.long)
     # B X E
     targets = torch.cat([b[1].unsqueeze(0) for b in batch], 0)
+    # print(inputs)
+    # print(targets)
     return inputs, targets

@@ -85,7 +85,7 @@ def main():
                         help='disables CUDA training')
     # some settings for training on specific edits.
     parser.add_argument('--edit', type=int, default=0,
-                        help='choose a specific edit. 0:all, 1:swap, 2:add, 3:del, 4:replace')
+                        help='choose a specific edit. 0:all, 1:swap, 2:add/del, 3:replace')
     args = parser.parse_args()
 
     args.use_cuda = not args.no_cuda and torch.cuda.is_available()
