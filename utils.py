@@ -106,7 +106,7 @@ def build_all(neg, edit):
                 word[k] = l
                 examples.append(word)
     inputs = torch.zeros(1, len(examples), max(
-        len(word)+1, min_len), dtype=torch.long)
+        len(neg)+1, min_len), dtype=torch.long)
     for i, ex in enumerate(examples, 0):
         vec_examples = [tok2index[tok] for tok in ex]
         inputs[0][i][:len(ex)] = torch.tensor(
