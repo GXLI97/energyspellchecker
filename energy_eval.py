@@ -10,7 +10,12 @@ from loss import Energy_Loss
 from torch.utils.data import DataLoader
 from utils import *
 
-def energy_eval(args, model, vocab, n=1000):
+def freq_vs_energy(args, model, vocab, freq_dict):
+    for i, word in enumerate(vocab):
+        pass
+
+
+def energy_eval(args, model, vocab, n=10000):
     # A LOT OF REDUNDANT CODE :(
     model.eval()
     vocabset = set(vocab)
@@ -74,18 +79,13 @@ def energy_eval(args, model, vocab, n=1000):
                 inputs = inputs.cuda(args.device, non_blocking=True)
             outputs = model(inputs)
             e3.append(outputs.cpu().numpy()[0][0])
-        
-    print(e0)
-    print(e1)
-    print(e2)
-    print(e3)
 
     from matplotlib import pyplot as plt
-    bins = np.linspace(-10,10,100)
-    plt.hist(e0, alpha=0.5, label='e0')
-    plt.hist(e1, alpha=0.5, label='e1')
-    plt.hist(e2, alpha=0.5, label='e2')
-    plt.hist(e3, alpha=0.5, label='e3')
+    bins = np.linspace(-50,50,1000)
+    plt.hist(e0, bins, alpha=0.5, label='e0')
+    plt.hist(e1, bins, alpha=0.5, label='e1')
+    plt.hist(e2, bins, alpha=0.5, label='e2')
+    plt.hist(e3, bins, alpha=0.5, label='e3')
     plt.legend(loc='upper right')
     # plt.show()
     plt.savefig('plt.png')
