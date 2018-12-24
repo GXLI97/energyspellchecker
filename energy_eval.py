@@ -10,7 +10,7 @@ from loss import Energy_Loss
 from torch.utils.data import DataLoader
 from utils import *
 
-def energy_eval(args, model, vocab, n=100):
+def energy_eval(args, model, vocab, n=1000):
     # A LOT OF REDUNDANT CODE :(
     model.eval()
     vocabset = set(vocab)
@@ -87,7 +87,7 @@ def energy_eval(args, model, vocab, n=100):
     plt.hist(e2, alpha=0.5, label='e2')
     plt.hist(e3, alpha=0.5, label='e3')
     plt.legend(loc='upper right')
-    plt.show()
+    # plt.show()
     plt.savefig('plt.png')
 
     # pick random word
