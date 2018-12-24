@@ -60,7 +60,7 @@ def r_replace(word):
 
 
 def get_random_negative(word, vocab, edit=0):
-    if not word:
+    if not word or len(word) < 2:
         return []
     neg = word.copy()
     if edit == 0:
