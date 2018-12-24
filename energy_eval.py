@@ -11,8 +11,25 @@ from torch.utils.data import DataLoader
 from utils import *
 
 def freq_vs_energy(args, model, vocab, freq_dict):
-    for i, word in enumerate(vocab):
-        pass
+    model.eval()
+    vocabset = set(vocab)
+    with torch.no_grad():
+        e0 = []
+        freqs = []
+        for i, word in enumerate(vocab):
+            freqs.append(freq_dict[word])
+            vec_word = [tok2index[tok] for tok in list(word)]
+            inputs = torch.zeros(1, 1, max(len(word), min_len), dtype=torch.long)
+            inputs[0][0][:len(word)] = torch.tensor(vec_word, dtype=torch.long)
+            if args.use_cuda:
+                inputs = inputs.cuda(args.device, non_blocking=True)
+            outputs = model(inputs)
+            e0.append(outputs.cpu().numpy()[0][0])
+    
+    from matplotlib import pyplot as plt
+    plt.semilogx(freqs, e0, '*')
+    plt.savefig('energy_freq.png')
+
 
 
 def energy_eval(args, model, vocab, n=10000):
@@ -88,7 +105,7 @@ def energy_eval(args, model, vocab, n=10000):
     plt.hist(e3, bins, alpha=0.5, label='e3')
     plt.legend(loc='upper right')
     # plt.show()
-    plt.savefig('plt.png')
+    plt.savefig('energy_edit.png')
 
     # pick random word
     # build 1edit
@@ -135,7 +152,8 @@ def main():
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
 
     # energy_evaluator
-    energy_eval(args, model, vocab)
+    freq_vs_energy(args, model, vocab, freq_dict)
+    # energy_eval(args, model, vocab)
 
 
 if __name__ == "__main__":
