@@ -153,7 +153,7 @@ def main():
 
     # energy_evaluator
     freq_vs_energy(args, model, vocab, freq_dict)
-    # energy_eval(args, model, vocab)
+    energy_eval(args, model, vocab)
 
 
 if __name__ == "__main__":
