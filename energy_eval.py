@@ -25,7 +25,7 @@ def energy_eval(args, model, vocab, n=1000):
             if args.use_cuda:
                 inputs = inputs.cuda(args.device, non_blocking=True)
             outputs = model(inputs)
-            e0.append(outputs.numpy()[0][0])
+            e0.append(outputs.cpu().numpy()[0][0])
         
         e1 = []
         for i in range(n):
@@ -40,7 +40,7 @@ def energy_eval(args, model, vocab, n=1000):
             if args.use_cuda:
                 inputs = inputs.cuda(args.device, non_blocking=True)
             outputs = model(inputs)
-            e1.append(outputs.numpy()[0][0])
+            e1.append(outputs.cpu().numpy()[0][0])
 
         e2 = []
         for i in range(n):
@@ -56,7 +56,7 @@ def energy_eval(args, model, vocab, n=1000):
             if args.use_cuda:
                 inputs = inputs.cuda(args.device, non_blocking=True)
             outputs = model(inputs)
-            e2.append(outputs.numpy()[0][0])
+            e2.append(outputs.cpu().numpy()[0][0])
         
         e3 = []
         for i in range(n):
@@ -73,7 +73,7 @@ def energy_eval(args, model, vocab, n=1000):
             if args.use_cuda:
                 inputs = inputs.cuda(args.device, non_blocking=True)
             outputs = model(inputs)
-            e3.append(outputs.numpy()[0][0])
+            e3.append(outputs.cpu().numpy()[0][0])
         
     print(e0)
     print(e1)
