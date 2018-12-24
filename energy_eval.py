@@ -27,6 +27,7 @@ def freq_vs_energy(args, model, vocab, freq_dict):
             e0.append(outputs.cpu().numpy()[0][0])
     
     from matplotlib import pyplot as plt
+    figure()
     plt.semilogx(freqs, e0, '*')
     plt.savefig('energy_freq.png')
 
@@ -98,6 +99,7 @@ def energy_eval(args, model, vocab, n=10000):
             e3.append(outputs.cpu().numpy()[0][0])
 
     from matplotlib import pyplot as plt
+    figure()
     bins = np.linspace(-50,50,1000)
     plt.hist(e0, bins, alpha=0.5, label='e0')
     plt.hist(e1, bins, alpha=0.5, label='e1')
@@ -152,7 +154,7 @@ def main():
     vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
 
     # energy_evaluator
-    freq_vs_energy(args, model, vocab, freq_dict)
+    # freq_vs_energy(args, model, vocab, freq_dict)
     energy_eval(args, model, vocab)
 
 
