@@ -59,7 +59,9 @@ def r_replace(word):
     return word
 
 
-def get_random_negative(word, vocab, edit):
+def get_random_negative(word, vocab, edit=0):
+    if not word:
+        return []
     neg = word.copy()
     if edit == 0:
         edits = [r_swap, r_add, r_del, r_replace]
