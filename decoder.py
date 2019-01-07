@@ -104,7 +104,7 @@ def main():
             args.model_save_file, map_location=lambda storage, loc: storage))
 
     # load vocabulary.
-    vocab, freq_dict = read_vocab(args.vocab_file, topk=args.topk)
+    vocab, _ = read_vocab(args.vocab_file, topk=args.topk)
 
     print("Evaluating on top {} words".format(args.topk))
     print("Using top {} decodes for each word".format(args.topd))

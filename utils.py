@@ -18,6 +18,13 @@ def read_vocab(filename, topk=10000):
     freq_dict = {line[0]: int(line[1]) for line in lines}
     return vocab, freq_dict
 
+def read_vocab2(filename, topk=10000):
+    lines = open(filename, encoding='utf-8').read().strip().split('\n')
+    lines = [line.split() for line in lines]
+    vocab = [line[0] for line in lines[:topk]]
+    freq_dict = {line[0]: int(line[1]) for line in lines}
+    return vocab, freq_dict
+
 
 def write_vocab_to_file(dataset, freq_dict, save_file):
     with open(save_file, 'w') as f:
@@ -34,6 +41,8 @@ def traintest_split(data, p=0.8):
 
 
 def r_swap(word):
+    if len(word) < 2:
+        return word
     k = random.randint(0, len(word)-2)
     word[k], word[k+1] = word[k+1], word[k]
     return word
@@ -60,7 +69,8 @@ def r_replace(word):
 
 
 def get_random_negative(word, vocab, edit=0):
-    if not word or len(word) < 2:
+    # could be the original word, or a word in vocabulary.
+    if not word:
         return []
     neg = word.copy()
     if edit == 0:
@@ -72,9 +82,6 @@ def get_random_negative(word, vocab, edit=0):
     else:
         edits = [r_replace]
     neg = random.choice(edits)(neg)
-    if "".join(neg)  in vocab:
-        # just return null example.
-        neg = []
     # print("".join(neg))
     return neg
 
@@ -140,7 +147,10 @@ def nce(word, vocab, num_neg, edit):
     examples.append(word)
     while len(examples) != num_neg + 1:
         neg = get_random_negative(word, vocab, edit)
-        examples.append(neg)
+        if "".join(neg) not in vocab:
+            examples.append(neg)
+        else:
+            examples.append([])
     vec_examples = [[tok2index[tok] for tok in ex] for ex in examples]
     # print(vec_examples)
     labels = torch.zeros(len(examples), dtype=torch.long)
@@ -168,3 +178,24 @@ def collate_fn(batch):
     # print(inputs)
     # print(targets)
     return inputs, targets
+
+# https://stackoverflow.com/questions/16922214/reading-a-text-file-and-splitting-it-into-single-words-in-python
+def read_words(inputfile):
+    # currently unused but a useful code snippet for byte stream reading of wikipedia datasets.
+    with open(inputfile, 'r') as f:
+        while True:
+            buf = f.read(10240)
+            if not buf:
+                break
+
+            # make sure we end on a space (word boundary)
+            while not str.isspace(buf[-1]):
+                ch = f.read(1)
+                if not ch:
+                    break
+                buf += ch
+
+            words = buf.split()
+            for word in words:
+                yield word
+            yield '' #handle the scene that the file is empty
