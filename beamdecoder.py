@@ -123,6 +123,7 @@ def main():
     # load vocabulary.
     vocab, _ = read_vocab(args.vocab_file, topk=args.topk)
 
+    print("testing beam decoding with numedits {} and beamsize {}".format(args.n_edits, args.beam_size))
     test_beam_decoder(args, model, vocab)
 
 

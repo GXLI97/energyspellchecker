@@ -33,7 +33,7 @@ def freq_vs_energy(args, model, vocab, freq_dict):
 
 
 
-def energy_eval(args, model, vocab, n=10):
+def energy_eval(args, model, vocab, n=100000):
     # A LOT OF REDUNDANT CODE :(
     model.eval()
     vocabset = set(vocab)
