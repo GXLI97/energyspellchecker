@@ -33,7 +33,7 @@ def freq_vs_energy(args, model, vocab, freq_dict):
 
 
 
-def energy_eval(args, model, vocab, n=10000):
+def energy_eval(args, model, vocab, n=10):
     # A LOT OF REDUNDANT CODE :(
     model.eval()
     vocabset = set(vocab)
@@ -101,10 +101,12 @@ def energy_eval(args, model, vocab, n=10000):
     from matplotlib import pyplot as plt
     plt.figure()
     bins = np.linspace(-50,50,1000)
-    plt.hist(e0, bins, alpha=0.5, label='e0')
-    plt.hist(e1, bins, alpha=0.5, label='e1')
-    plt.hist(e2, bins, alpha=0.5, label='e2')
-    plt.hist(e3, bins, alpha=0.5, label='e3')
+    plt.hist(e0, bins, alpha=0.5, label='E=0')
+    plt.hist(e1, bins, alpha=0.5, label='E=1')
+    plt.hist(e2, bins, alpha=0.5, label='E=2')
+    plt.hist(e3, bins, alpha=0.5, label='E=3')
+    plt.xlabel('Energy Score')
+    plt.ylabel('Count')
     plt.legend(loc='upper right')
     # plt.show()
     plt.savefig('energy_edit.png')
