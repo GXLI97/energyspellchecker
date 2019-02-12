@@ -18,7 +18,7 @@ def train(args, model, optimizer, criterion, train_loader, epoch):
             input, target = input.cuda(args.device, non_blocking=True), target.cuda(
                 args.device, non_blocking=True)
         optimizer.zero_grad()
-        output = model(input)
+        output, _ = model(input)
         loss = criterion(output, target)
         loss.backward()
         optimizer.step()
@@ -42,7 +42,7 @@ def test1(args, model, criterion, test_loader):
             if args.use_cuda:
                 input, target = input.cuda(args.device, non_blocking=True), target.cuda(
                     args.device, non_blocking=True)
-            outputs = model(input)
+            outputs, _ = model(input)
             test_loss += criterion(outputs, target)
             v, j = outputs.min(1)
             # correct ones are 0.
@@ -64,7 +64,7 @@ def test2(args, model, criterion, test_loader):
             if args.use_cuda:
                 input, target = input.cuda(args.device, non_blocking=True), target.cuda(
                     args.device, non_blocking=True)
-            outputs = model(input)
+            outputs, _ = model(input)
             # ravel index into 1d
             outputs = outputs.view(-1)
             # get the top half.
@@ -122,7 +122,7 @@ def main():
 
     # instantiate CNN, loss, and optimizer.
     print("Initializing Model...")
-    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7, 8], 0.25, 1).to(
+    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7, 8], 0.25, 1000, 1).to(
         device=args.device)
     print("Initializing Energy Loss with beta = {}".format(args.beta))
     criterion = Energy_Loss(beta=args.beta)

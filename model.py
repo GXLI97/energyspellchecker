@@ -4,7 +4,7 @@ import torch.nn.functional as F
 
 
 class CNN(nn.Module):
-    def __init__(self, n_chars, embed_dim, channel_in, channel_out, kernel_sizes, dropout, output_dim):
+    def __init__(self, n_chars, embed_dim, channel_in, channel_out, kernel_sizes, dropout, rep_dim, output_dim):
         super(CNN, self).__init__()
         Nc = n_chars
         D = embed_dim
@@ -13,14 +13,15 @@ class CNN(nn.Module):
         Ks = kernel_sizes
         Drop = dropout
         Out = output_dim
+        Rep = rep_dim
         # construct embedding lookup table.
         # use last one as data pad.
         self.embedding = nn.Embedding(Nc, D, padding_idx=0)
         self.convs1 = nn.ModuleList(
             [nn.Conv2d(Ci, Co, kernel_size=(K, D)) for K in Ks])
         self.dropout = nn.Dropout(Drop)
-        self.fc1 = nn.Linear(len(Ks)*Co, 1000)
-        self.fc2 = nn.Linear(1000, Out)
+        self.fc1 = nn.Linear(len(Ks)*Co, Rep)
+        self.fc2 = nn.Linear(Rep, Out)
 
     def forward(self, input):
         # input is (B, N, W)
@@ -36,10 +37,11 @@ class CNN(nn.Module):
              for i in x]  # [(B*N, Co) for K in Ks]
         x = torch.cat(x, 1)  # (B*N, Co * len(Ks))
         x = self.dropout(x)
-        x = F.relu(self.fc1(x))  # (B*N, 500)
+        x = F.relu(self.fc1(x))  # (B*N, Rep)
+        reps = x.view(input.size(0),input.size(1), -1)
         x = self.fc2(x) #(B*N, Out)
         # TODO: try to normalize?
         # x = (x-torch.mean(x))/torch.norm(x) # normalize
         # unsquash.
         x = x.view(input.size(0),input.size(1)) # (B, N, Out)
-        return x
+        return x, reps

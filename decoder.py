@@ -16,7 +16,7 @@ def decode(args, model, neg):
     try:
         if args.use_cuda:
             inputs = inputs.cuda(args.device, non_blocking=True)
-        outputs = model(inputs)
+        outputs, _ = model(inputs)
         vals, idxs = torch.topk(outputs, args.topd, dim=1, largest=False)
         inputs_topd = inputs[0][idxs].squeeze(0)
         decodes = set()
@@ -94,7 +94,7 @@ def main():
 
     # instantiate CNN, loss, and optimizer.
     print("Loading Model from {}".format(args.model_save_file))
-    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7, 8], 0.25, 1).to(
+    model = CNN(n_chars, 10, 1, 256, [1, 2, 3, 4, 5, 6, 7, 8], 0.25, 1000, 1).to(
         device=args.device)
     # some weird loading, TODO: test this out on gpu.
     if args.use_cuda:

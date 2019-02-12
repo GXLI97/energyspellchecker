@@ -10,17 +10,6 @@ import numpy as np
 import time
 
 
-def get_edit(word, n_edits=1, edit=1):
-    neg = []
-    while not neg:
-        neg = word.copy()
-        for i in range(n_edits):
-            # TODO: for now just use S W A P S, but later use this edit parameter.
-            edits = [r_swap]
-            neg = random.choice(edits)(neg)
-    return neg
-
-
 def beam_decode(args, model, neg):
     candidates = [neg]
     for i in range(args.n_edits):

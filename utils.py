@@ -56,6 +56,8 @@ def r_add(word):
 
 
 def r_del(word):
+    if len(word) < 2:
+        return word
     k = random.randint(0, len(word)-1)
     del word[k]
     return word
@@ -121,6 +123,26 @@ def build_all(neg, edit):
         inputs[0][i][:len(ex)] = torch.tensor(
             vec_examples, dtype=torch.long)
     return inputs
+
+def get_edit(word, n_edits=1, edit=0):
+    neg = []
+    while not neg:
+        neg = word.copy()
+        for i in range(n_edits):
+            if edit == 0:
+                edit_list = [r_swap, r_add, r_del, r_replace]
+            elif edit == 1:
+                edit_list = [r_swap]
+            elif edit == 2:
+                edit_list = [r_add]
+            elif edit == 3:
+                edit_list = [r_del]
+            elif edit == 4:
+                edit_list = [r_replace]
+            else:
+                raise NotImplementedError
+            neg = random.choice(edit_list)(neg)
+    return neg
 
 
 class Dataset(data.Dataset):
