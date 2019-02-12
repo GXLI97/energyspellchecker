@@ -8,3 +8,4 @@ data/glove*
 *.pptx
 *.png
 *.pkl
+data/6B.*
